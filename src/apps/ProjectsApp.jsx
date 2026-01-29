@@ -1,0 +1,91 @@
+import { useState } from 'react';
+
+const projects = [
+  {
+    id: 1,
+    name: 'Project Alpha',
+    icon: '📁',
+    description: 'A full-stack web application built with React and Node.js',
+    link: '#',
+  },
+  {
+    id: 2,
+    name: 'Project Beta',
+    icon: '📁',
+    description: 'An interactive data visualization dashboard',
+    link: '#',
+  },
+  {
+    id: 3,
+    name: 'Project Gamma',
+    icon: '📁',
+    description: 'A mobile-first e-commerce platform',
+    link: '#',
+  },
+  {
+    id: 4,
+    name: 'Project Delta',
+    icon: '📁',
+    description: 'An AI-powered chatbot application',
+    link: '#',
+  },
+  {
+    id: 5,
+    name: 'Retro OS Website',
+    icon: '💻',
+    description: 'This website! A Windows 95 themed portfolio.',
+    link: '#',
+  },
+  {
+    id: 6,
+    name: 'README.txt',
+    icon: '📄',
+    description: 'Click on any project folder to learn more!',
+    link: null,
+  },
+];
+
+export default function ProjectsApp() {
+  const [selectedProject, setSelectedProject] = useState(null);
+
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      {/* Address Bar */}
+      <div className="explorer-address-bar">
+        <span>Address:</span>
+        <input 
+          className="explorer-address-input" 
+          value="C:\Users\Daniel\Projects" 
+          readOnly 
+        />
+      </div>
+      
+      {/* Project Grid */}
+      <div className="explorer-grid" style={{ flex: 1 }}>
+        {projects.map((project) => (
+          <div
+            key={project.id}
+            className={`explorer-item ${selectedProject?.id === project.id ? 'selected' : ''}`}
+            onClick={() => setSelectedProject(project)}
+            onDoubleClick={() => project.link && window.open(project.link, '_blank')}
+          >
+            <div className="explorer-item-icon">{project.icon}</div>
+            <div className="explorer-item-label">{project.name}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Status Bar */}
+      {selectedProject && (
+        <div style={{ 
+          padding: '4px 8px', 
+          borderTop: '2px solid #808080',
+          backgroundColor: '#c0c0c0',
+          fontSize: '11px'
+        }}>
+          {selectedProject.description}
+        </div>
+      )}
+    </div>
+  );
+}
