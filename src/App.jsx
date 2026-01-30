@@ -10,7 +10,7 @@ import ContextMenu from './components/ContextMenu';
 // App Components
 import NotepadApp from './apps/NotepadApp';
 import AboutApp from './apps/AboutApp';
-import ProjectsApp from './apps/ProjectsApp';
+import ExplorerApp from './apps/ExplorerApp';
 import ContactApp from './apps/ContactApp';
 import SkillsApp from './apps/SkillsApp';
 import InternetExplorerApp from './apps/InternetExplorerApp';
@@ -28,7 +28,7 @@ function AppRenderer({ appType, fileId, onClose }) {
     case 'about':
       return <AboutApp />;
     case 'explorer':
-      return <ProjectsApp folderId={fileId} />;
+      return <ExplorerApp folderId={fileId} />;
     case 'mycomputer':
       return <SkillsApp />;
     case 'browser':
@@ -52,7 +52,7 @@ function AppRenderer({ appType, fileId, onClose }) {
 
 function Desktop() {
   const { windows, getFocusedWindowId, closeWindow } = useOS();
-  const { getDesktopFiles, getFile } = useFileSystem();
+  const { getDesktopFiles, getFile, moveFileToFolder, moveFile } = useFileSystem();
   const focusedWindowId = getFocusedWindowId();
   const desktopFiles = getDesktopFiles();
 
@@ -93,8 +93,37 @@ function Desktop() {
     }
   };
 
+  // Handle drop on desktop (from explorer windows)
+  const handleDesktopDrop = (e) => {
+    // Only handle if dropped directly on desktop, not on a window
+    if (e.target.closest('.window')) return;
+    
+    const draggedFileId = window.__draggingFileId;
+    if (draggedFileId) {
+      // Calculate drop position relative to desktop
+      const desktop = document.querySelector('.desktop');
+      const rect = desktop.getBoundingClientRect();
+      const x = Math.max(0, Math.min(e.clientX - rect.left - 40, rect.width - 80));
+      const y = Math.max(0, Math.min(e.clientY - rect.top - 40, rect.height - 80));
+      
+      // Move file to desktop and set position
+      moveFileToFolder(draggedFileId, 'desktop');
+      moveFile(draggedFileId, x, y);
+      
+      window.__draggingFileId = null;
+    }
+  };
+
+  const handleDesktopDragOver = (e) => {
+    e.preventDefault();
+  };
+
   return (
-    <div className="desktop">
+    <div 
+      className="desktop"
+      onDrop={handleDesktopDrop}
+      onDragOver={handleDesktopDragOver}
+    >
       {/* Desktop Icons from File System */}
       {desktopFiles.map((file) => (
         <DesktopIcon key={file.id} file={file} />
@@ -102,8 +131,6 @@ function Desktop() {
 
       {/* Windows */}
       {windows.map((window) => {
-        if (window.isMinimized) return null;
-        
         const file = getFile(window.fileId);
 
         return (
@@ -116,6 +143,7 @@ function Desktop() {
             size={window.size}
             zIndex={window.zIndex}
             isActive={focusedWindowId === window.id}
+            isMinimized={window.isMinimized}
             onSave={() => handleSave(window.fileId)}
             onMenuAction={(action) => handleMenuAction(window.fileId, action)}
           >

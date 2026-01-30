@@ -2,27 +2,17 @@ const skills = [
   {
     category: 'Languages',
     icon: '💾',
-    items: ['JavaScript', 'TypeScript', 'Python', 'HTML/CSS', 'SQL'],
+    items: ['Python', 'Java', 'C', 'C++', 'JavaScript', 'TypeScript', 'SQL', 'HTML/CSS'],
   },
   {
-    category: 'Frontend',
-    icon: '🖥️',
-    items: ['React', 'Next.js', 'Vue.js', 'Tailwind CSS', 'Framer Motion'],
+    category: 'Tools/Frameworks',
+    icon: '�',
+    items: ['React.js', 'Next.js', 'React Native', 'Expo', 'Node.js', 'Express', 'FastAPI', 'PyTorch', 'Flask', 'Tailwind', 'NativeWind', 'Vite', 'Git', 'Vercel'],
   },
   {
-    category: 'Backend',
-    icon: '⚙️',
-    items: ['Node.js', 'Express', 'PostgreSQL', 'MongoDB', 'GraphQL'],
-  },
-  {
-    category: 'Tools',
-    icon: '🔧',
-    items: ['Git', 'Docker', 'VS Code', 'Figma', 'Linux'],
-  },
-  {
-    category: 'Interests',
-    icon: '🌟',
-    items: ['Creative Coding', 'UI/UX Design', 'Open Source', 'Teaching'],
+    category: 'Cloud/Databases',
+    icon: '☁️',
+    items: ['PostgreSQL', 'MySQL', 'Firebase', 'SQLite', 'SQLAlchemy', 'AWS', 'Google Cloud'],
   },
 ];
 
@@ -99,7 +89,7 @@ export default function SkillsApp() {
         color: '#808080',
         textAlign: 'center'
       }}>
-        5 categories • Always learning more!
+        3 categories • Always learning more!
       </div>
     </div>
   );

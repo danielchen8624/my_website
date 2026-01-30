@@ -14,6 +14,7 @@ export default function Window({
   onSave,
   onMenuAction,
   hideMenuBar = false,
+  isMinimized = false,
 }) {
   const { closeWindow, minimizeWindow, focusWindow, updateWindowPosition, maximizeWindow, windows } = useOS();
   const windowRef = useRef(null);
@@ -116,17 +117,12 @@ export default function Window({
   }, []);
 
   // Compute window styles
-  const windowStyle = isMaximized ? {
-    left: 0,
-    top: 0,
-    width: '100vw',
-    height: 'calc(100vh - var(--taskbar-height))',
-    zIndex: zIndex,
-  } : {
-    left: position.x,
-    top: position.y,
-    width: size.width,
-    height: size.height,
+  const windowStyle = {
+    display: isMinimized ? 'none' : 'flex',
+    left: isMaximized ? 0 : position.x,
+    top: isMaximized ? 0 : position.y,
+    width: isMaximized ? '100vw' : size.width,
+    height: isMaximized ? 'calc(100vh - var(--taskbar-height))' : size.height,
     zIndex: zIndex,
   };
 

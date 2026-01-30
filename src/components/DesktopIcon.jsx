@@ -16,6 +16,9 @@ export default function DesktopIcon({ file }) {
   const iconRef = useRef(null);
   const inputRef = useRef(null);
   const lastClickTimeRef = useRef(0);
+  const dragStartPosRef = useRef({ x: 0, y: 0 });
+  const hasDraggedRef = useRef(false);
+  const DRAG_THRESHOLD = 5; // pixels
 
   // Focus input when renaming
   useEffect(() => {
@@ -46,6 +49,12 @@ export default function DesktopIcon({ file }) {
   // Handle single click to select, slow double-click to rename
   const handleClick = useCallback((e) => {
     e.stopPropagation();
+    
+    // If we just dragged, don't process as click
+    if (hasDraggedRef.current) {
+      hasDraggedRef.current = false;
+      return;
+    }
     
     const now = Date.now();
     const timeSinceLastClick = now - lastClickTimeRef.current;
@@ -115,20 +124,39 @@ export default function DesktopIcon({ file }) {
     if (e.button !== 0) return; // Only left click
     
     setIsSelected(true);
+    
+    // Record start position for threshold check
+    dragStartPosRef.current = { x: e.clientX, y: e.clientY };
+    hasDraggedRef.current = false;
+    
+    // Set dragging state (but actual visual dragging starts after threshold)
     setIsDragging(true);
+    
+    // Emit for cross-window drop
+    window.__draggingFileId = file.id;
     
     const rect = iconRef.current.getBoundingClientRect();
     setDragOffset({
       x: e.clientX - rect.left,
       y: e.clientY - rect.top,
     });
-  }, [isRenaming]);
+  }, [isRenaming, file.id]);
 
   // Drag move and end
   useEffect(() => {
     if (!isDragging) return;
 
     const handleMouseMove = (e) => {
+      // Check if we've exceeded drag threshold
+      const dx = Math.abs(e.clientX - dragStartPosRef.current.x);
+      const dy = Math.abs(e.clientY - dragStartPosRef.current.y);
+      
+      if (dx < DRAG_THRESHOLD && dy < DRAG_THRESHOLD) {
+        return; // Haven't moved enough to be a drag
+      }
+      
+      hasDraggedRef.current = true;
+      
       const desktop = document.querySelector('.desktop');
       if (!desktop) return;
       
@@ -146,7 +174,7 @@ export default function DesktopIcon({ file }) {
         iconRef.current.style.top = `${newY}px`;
       }
       
-      // Check for drop targets
+      // Check for drop targets (desktop icons and open explorer windows)
       const targetId = checkDropTarget(e.clientX, e.clientY);
       
       // Highlight drop target
@@ -165,10 +193,18 @@ export default function DesktopIcon({ file }) {
     const handleMouseUp = (e) => {
       setIsDragging(false);
       
+      // Clear global drag state
+      window.__draggingFileId = null;
+      
       // Clear drop target highlights
       document.querySelectorAll('.desktop-icon').forEach(el => {
         el.classList.remove('drop-target');
       });
+      
+      // If we didn't actually drag, don't update position
+      if (!hasDraggedRef.current) {
+        return;
+      }
       
       // Check if dropped on a folder/recycle bin
       const targetId = checkDropTarget(e.clientX, e.clientY);

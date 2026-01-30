@@ -8,27 +8,54 @@ export default function ContextMenu() {
   
   const [isVisible, setIsVisible] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [targetType, setTargetType] = useState('desktop'); // 'desktop', 'file', 'folder'
+  const [targetType, setTargetType] = useState('desktop'); // 'desktop', 'file', 'folder', 'folder-background'
   const [targetId, setTargetId] = useState(null);
+  const [currentFolderId, setCurrentFolderId] = useState('desktop');
 
   // Handle right-click
   const handleContextMenu = useCallback((e) => {
     e.preventDefault();
     
     // Determine what was clicked
-    const iconElement = e.target.closest('.desktop-icon');
+    const desktopIconElement = e.target.closest('.desktop-icon');
+    const explorerItemElement = e.target.closest('.explorer-item');
+    const explorerGridElement = e.target.closest('.explorer-grid');
+    const windowElement = e.target.closest('.window');
     
-    if (iconElement) {
-      const fileId = iconElement.dataset.fileId;
+    if (desktopIconElement) {
+      // Right-clicked on a desktop icon
+      const fileId = desktopIconElement.dataset.fileId;
       const file = getFile(fileId);
       
       if (file) {
         setTargetType(file.type === 'folder' ? 'folder' : 'file');
         setTargetId(fileId);
+        setCurrentFolderId('desktop');
       }
+    } else if (explorerItemElement) {
+      // Right-clicked on an item inside an explorer window
+      const fileId = explorerItemElement.dataset.fileId;
+      const file = getFile(fileId);
+      
+      // Try to find the current folder from the window context
+      const explorerGrid = explorerItemElement.closest('.explorer-grid');
+      const folderId = explorerGrid?.dataset?.folderId || 'desktop';
+      
+      if (file) {
+        setTargetType(file.type === 'folder' ? 'folder' : 'file');
+        setTargetId(fileId);
+        setCurrentFolderId(folderId);
+      }
+    } else if (explorerGridElement) {
+      // Right-clicked on empty space inside an explorer window
+      const folderId = explorerGridElement.dataset?.folderId || 'desktop';
+      setTargetType('folder-background');
+      setTargetId(null);
+      setCurrentFolderId(folderId);
     } else if (e.target.closest('.desktop')) {
       setTargetType('desktop');
       setTargetId(null);
+      setCurrentFolderId('desktop');
     } else {
       return; // Don't show menu for other areas
     }
@@ -57,10 +84,10 @@ export default function ContextMenu() {
   const handleAction = (action) => {
     switch (action) {
       case 'newFolder':
-        createFolder();
+        createFolder(currentFolderId);
         break;
       case 'newTextFile':
-        createTextFile();
+        createTextFile(currentFolderId);
         break;
       case 'open':
         if (targetId) {
@@ -112,7 +139,7 @@ export default function ContextMenu() {
 
   // Render different menus based on target
   const renderMenuItems = () => {
-    if (targetType === 'desktop') {
+    if (targetType === 'desktop' || targetType === 'folder-background') {
       return (
         <>
           <div className="context-menu-item" onClick={() => handleAction('newFolder')}>

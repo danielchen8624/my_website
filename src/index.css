@@ -533,9 +533,10 @@ body {
    ============================================ */
 .explorer-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  grid-template-columns: repeat(auto-fill, 80px);
   gap: 16px;
   padding: 8px;
+  align-content: start;
 }
 
 .explorer-item {
@@ -566,6 +567,21 @@ body {
   text-align: center;
   word-wrap: break-word;
   max-width: 100%;
+}
+
+.explorer-rename-input {
+  font-size: 11px;
+  text-align: center;
+  width: 80px;
+  padding: 2px;
+  border: 1px solid #000080;
+  background: #ffffff;
+}
+
+.explorer-grid.drop-target {
+  background-color: rgba(0, 0, 128, 0.1);
+  outline: 2px dashed #000080;
+  outline-offset: -2px;
 }
 
 .explorer-toolbar {

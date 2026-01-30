@@ -82,7 +82,7 @@ export default function ContactApp() {
         backgroundColor: '#ffffcc',
         border: '1px solid #808080'
       }}>
-        💡 <strong>Tip:</strong> You can also find me through the Start Menu → Help!
+        💡 <strong>Tip:</strong> You can also find me through the Start Menu --{'>'} Help!
       </div>
     </div>
   );

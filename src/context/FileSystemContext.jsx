@@ -169,6 +169,11 @@ export function FileSystemProvider({ children }) {
     return folder.children.map(id => files[id]).filter(Boolean);
   }, [files]);
 
+  // Get all files in a folder (alias for getFolderContents, for consistency)
+  const getFilesInFolder = useCallback((folderId) => {
+    return getFolderContents(folderId);
+  }, [getFolderContents]);
+
   // Rename a file
   const renameFile = useCallback((id, newName) => {
     setFiles(prev => ({
@@ -303,7 +308,7 @@ export function FileSystemProvider({ children }) {
 
   // Create new folder
   const createFolder = useCallback((parentId = 'desktop') => {
-    return addFile({
+    const newId = addFile({
       name: 'New Folder',
       type: 'folder',
       icon: '📁',
@@ -311,11 +316,18 @@ export function FileSystemProvider({ children }) {
       children: [],
       appType: 'explorer',
     }, parentId);
+    
+    // Dispatch auto-rename event after a short delay to let the DOM update
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('startRename', { detail: { fileId: newId } }));
+    }, 50);
+    
+    return newId;
   }, [addFile]);
 
   // Create new text file
   const createTextFile = useCallback((parentId = 'desktop') => {
-    return addFile({
+    const newId = addFile({
       name: 'New Text Document.txt',
       type: 'file',
       icon: '📝',
@@ -323,6 +335,13 @@ export function FileSystemProvider({ children }) {
       content: '',
       appType: 'notepad',
     }, parentId);
+    
+    // Dispatch auto-rename event after a short delay to let the DOM update
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('startRename', { detail: { fileId: newId } }));
+    }, 50);
+    
+    return newId;
   }, [addFile]);
 
   // Reset to defaults
@@ -422,6 +441,7 @@ export function FileSystemProvider({ children }) {
     getFile,
     getDesktopFiles,
     getFolderContents,
+    getFilesInFolder,
     renameFile,
     updateFileContent,
     moveFile,

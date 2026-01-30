@@ -1,28 +1,18 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 
-// Working demo tracks using public domain/test audio
+// Custom Playlist - Matches files in public/music/
 const DEMO_TRACKS = [
-  { 
-    id: 1, 
-    title: 'Winamp Intro (Llama)', 
-    artist: 'DJ Mike Llama', 
-    duration: '0:05', 
-    src: 'https://archive.org/download/WinampItReallyWhipsTheLlamasAss/Winamp_It_really_whips_the_llamas_ass.mp3' 
-  },
-  { 
-    id: 2, 
-    title: 'Techno Beat', 
-    artist: 'SoundHelix', 
-    duration: '6:12', 
-    src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' 
-  },
-  { 
-    id: 3, 
-    title: 'Classic Synth', 
-    artist: 'Retro Wave', 
-    duration: '7:05', 
-    src: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3' 
-  },
+  { id: 1, title: 'August', artist: 'Taylor Swift', duration: '4:21', src: '/music/august.mp3' },
+  { id: 2, title: 'Enchanted', artist: 'Taylor Swift', duration: '5:52', src: '/music/enchanted.mp3' },
+  { id: 3, title: 'Iris', artist: 'Goo Goo Dolls', duration: '4:50', src: '/music/iris.mp3' },
+  { id: 4, title: 'Marry You', artist: 'Bruno Mars', duration: '3:50', src: '/music/marry_you.mp3' },
+  { id: 5, title: 'Memories', artist: 'Conan Gray', duration: '4:08', src: '/music/memories.mp3' },
+  { id: 6, title: 'Let Her Go', artist: 'Passenger', duration: '4:12', src: '/music/passenger.mp3' },
+  { id: 7, title: 'Photograph', artist: 'Ed Sheeran', duration: '4:19', src: '/music/photograph.mp3' },
+  { id: 8, title: 'Somewhere Only We Know', artist: 'Keane', duration: '3:57', src: '/music/somewhere_only_we_know.mp3' },
+  { id: 9, title: 'Talking to the Moon', artist: 'Bruno Mars', duration: '3:37', src: '/music/talking_to_the_moon.mp3' },
+  { id: 10, title: 'We Are Young', artist: 'fun. ft. Janelle Monáe', duration: '4:10', src: '/music/we_are_young.mp3' },
+  { id: 11, title: 'You Belong With Me', artist: 'Taylor Swift', duration: '3:51', src: '/music/you_belong_with_me.mp3' },
 ];
 
 export default function WinampApp() {
@@ -46,24 +36,36 @@ export default function WinampApp() {
     }
   }, [volume]);
 
-  // Handle track change - play automatically if was playing or is new track
+  // Handle track change
+  const lastTrackIdRef = useRef(null);
+
   useEffect(() => {
     if (!audioRef.current || !currentTrack.src) return;
 
-    // Load the new source
-    audioRef.current.src = currentTrack.src;
-    audioRef.current.load();
+    // Only load if it's a different track
+    if (lastTrackIdRef.current !== currentTrack.id) {
+      audioRef.current.src = currentTrack.src;
+      audioRef.current.load();
+      lastTrackIdRef.current = currentTrack.id;
 
-    if (isPlaying) {
-      const playPromise = audioRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.error("Auto-play prevented:", error);
-          setIsPlaying(false);
-        });
+      if (isPlaying) {
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.error("Auto-play prevented:", error);
+            setIsPlaying(false);
+          });
+        }
       }
+    } else {
+        // Same track, just ensure play state matches
+        if (isPlaying && audioRef.current.paused) {
+            audioRef.current.play().catch(e => console.error(e));
+        } else if (!isPlaying && !audioRef.current.paused) {
+            audioRef.current.pause();
+        }
     }
-  }, [currentTrackIndex, currentTrack.src]);
+  }, [currentTrackIndex, currentTrack.src, currentTrack.id, isPlaying]);
 
   // Visualizer Animation
   useEffect(() => {
@@ -115,18 +117,6 @@ export default function WinampApp() {
   // Playback controls
   const togglePlay = () => {
     if (!audioRef.current) return;
-
-    if (isPlaying) {
-      audioRef.current.pause();
-    } else {
-      const playPromise = audioRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.error("Playback failed:", error);
-          alert("Could not play audio. Check URL or network.\n\nTry dragging an MP3 file from your computer!");
-        });
-      }
-    }
     setIsPlaying(!isPlaying);
   };
 
