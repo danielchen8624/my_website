@@ -89,6 +89,13 @@ export function OSProvider({ children }) {
     );
   }, []);
 
+  // Minimize all windows (Show Desktop)
+  const minimizeAll = useCallback(() => {
+    setWindows((prev) =>
+      prev.map((w) => ({ ...w, isMinimized: true }))
+    );
+  }, []);
+
   // Maximize or restore a window
   const maximizeWindow = useCallback((windowId) => {
     setWindows((prev) =>
@@ -181,6 +188,7 @@ export function OSProvider({ children }) {
     openWindow,
     closeWindow,
     minimizeWindow,
+    minimizeAll,
     maximizeWindow,
     focusWindow,
     updateWindowPosition,

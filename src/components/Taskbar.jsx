@@ -3,7 +3,7 @@ import { useOS } from '../context/OSContext';
 import Icon from './Icon';
 
 export default function Taskbar() {
-  const { windows, toggleStartMenu, startMenuOpen, focusWindow, minimizeWindow, openWindow } = useOS();
+  const { windows, toggleStartMenu, startMenuOpen, focusWindow, minimizeWindow, minimizeAll, openWindow } = useOS();
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // Update clock every minute
@@ -49,14 +49,10 @@ export default function Taskbar() {
 
       {/* Quick Launch */}
       <div className="quick-launch">
-         <button 
-           className="quick-launch-btn" 
+         <button
+           className="quick-launch-btn"
            title="Show Desktop"
-           onClick={() => {
-             // Minimize all logic placeholder
-             const desktop = document.querySelector('.desktop');
-             if (desktop) desktop.click(); // Hack to defocus windows
-           }}
+           onClick={minimizeAll}
          >
            <Icon icon="desktop" size={16} />
          </button>

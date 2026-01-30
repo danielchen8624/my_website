@@ -110,8 +110,15 @@ export default function StartMenu() {
 
   const handleReset = () => {
     if (confirm('⚠️ WARNING: This will reset all files, settings, and changes to default.\n\nAre you sure you want to continue?')) {
-      localStorage.removeItem('retro-os-filesystem-v4'); // Updated to v4
-      localStorage.removeItem('retroos-wallpaper');
+      // Remove ALL localStorage keys that start with 'retro' to ensure complete wipe
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith('retro') || key.startsWith('retro-os'))) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
       window.location.reload();
     }
   };
