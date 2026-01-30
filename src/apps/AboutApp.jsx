@@ -5,14 +5,14 @@ export default function AboutApp() {
 ║                    ABOUT ME                          ║ 
 ╚════════════════════════════════════════════════════╝
 
-Hello, World! 👋
+Hello, World! 
 
 I'm Daniel Chen, a passionate developer who loves 
 building creative and interactive experiences.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🎯 WHAT I DO
+  WHAT I DO
 ─────────────────────────────────────────────────────
 • Full-Stack Web Development
 • Backend Development
@@ -22,7 +22,7 @@ building creative and interactive experiences.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🌟 FUN FACTS
+  FUN FACTS
 ─────────────────────────────────────────────────────
 • I built this website to look like Windows 95 
   because I love the aesthetic of classic 

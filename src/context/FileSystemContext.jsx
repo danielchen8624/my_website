@@ -375,9 +375,54 @@ export function FileSystemProvider({ children }) {
       const file = prev[id];
       // Don't rename system files
       if (!file || file.type === 'system') return prev;
+      
+      // Find parent to check uniqueness
+      let parentId = null;
+      for (const [key, parent] of Object.entries(prev)) {
+        if (parent.children && parent.children.includes(id)) {
+          parentId = key;
+          break;
+        }
+      }
+      
+      // If we can't find parent (shouldn't happen), just rename
+      if (!parentId) {
+         return {
+          ...prev,
+          [id]: { ...prev[id], name: newName }
+        };
+      }
+      
+      // Check uniqueness against siblings
+      // We can reuse the logic, but we need access to the *current* state inside setFiles
+      // Since getUniqueName depends on 'files' state which might be stale inside setFiles updater if checking *other* updates,
+      // but here we are in a callback.
+      // However, to be safe and simple, let's just do the check here with 'prev' state
+      
+      const parent = prev[parentId];
+      const siblingNames = parent.children
+        .filter(childId => childId !== id) // Exclude self
+        .map(childId => prev[childId]?.name?.toLowerCase())
+        .filter(Boolean);
+        
+      let finalName = newName;
+      let counter = 2;
+      
+      while (siblingNames.includes(finalName.toLowerCase())) {
+        const lastDotIndex = newName.lastIndexOf('.');
+        if (lastDotIndex > 0) {
+          const baseName = newName.substring(0, lastDotIndex);
+          const extension = newName.substring(lastDotIndex);
+          finalName = `${baseName} (${counter})${extension}`;
+        } else {
+          finalName = `${newName} (${counter})`;
+        }
+        counter++;
+      }
+
       return {
         ...prev,
-        [id]: { ...prev[id], name: newName }
+        [id]: { ...prev[id], name: finalName }
       };
     });
   }, []);
@@ -398,17 +443,50 @@ export function FileSystemProvider({ children }) {
     }));
   }, []);
 
+  // Pure helper to ensure unique file name within a state object
+  const calculateUniqueName = (filesState, parentId, name, excludeId = null) => {
+    const parent = filesState[parentId];
+    if (!parent || !parent.children) return name;
+
+    const siblingNames = parent.children
+      .filter(id => id !== excludeId)
+      .map(id => filesState[id]?.name?.toLowerCase())
+      .filter(Boolean);
+
+    let finalName = name;
+    let counter = 2;
+    
+    while (siblingNames.includes(finalName.toLowerCase())) {
+        const lastDotIndex = name.lastIndexOf('.');
+        if (lastDotIndex > 0) {
+          const baseName = name.substring(0, lastDotIndex);
+          const extension = name.substring(lastDotIndex);
+          finalName = `${baseName} (${counter})${extension}`;
+        } else {
+          finalName = `${name} (${counter})`;
+        }
+        counter++;
+    }
+    return finalName;
+  };
+
   // Add a new file
   const addFile = useCallback((file, parentId = 'desktop') => {
     const newId = `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     // Destructure to exclude any existing id from the source file
     const { id: _ignoreId, ...fileWithoutId } = file;
-    const newFile = {
-      ...fileWithoutId,
-      id: newId, // Ensure new ID is always used
-    };
     
     setFiles(prev => {
+      // Calculate unique name using the PREVIOUS state to ensure consistency
+      // especially when multiple files are added in quick succession (like paste)
+      const uniqueName = calculateUniqueName(prev, parentId, fileWithoutId.name);
+      
+      const newFile = {
+        ...fileWithoutId,
+        id: newId, // Ensure new ID is always used
+        name: uniqueName, 
+      };
+
       const parent = prev[parentId];
       return {
         ...prev,
@@ -422,6 +500,8 @@ export function FileSystemProvider({ children }) {
     
     return newId;
   }, []);
+    
+
 
   // Delete a file (move to recycle bin)
   const deleteFile = useCallback((id, parentId = null) => {
@@ -551,6 +631,9 @@ export function FileSystemProvider({ children }) {
           if (!targetParent) return;
           if (targetParent.children && targetParent.children.includes(fileIdToMove)) return;
 
+          // Ensure unique name in target folder
+          const uniqueName = calculateUniqueName(newState, targetFolderId, file.name, fileIdToMove);
+
           newState = {
             ...newState,
             [currentParentId]: {
@@ -563,6 +646,7 @@ export function FileSystemProvider({ children }) {
             },
             [fileIdToMove]: {
               ...file,
+              name: uniqueName, // Update name
               position: targetFolderId === 'desktop'
                 ? (file.position || { x: 100, y: 100 })
                 : undefined
@@ -647,6 +731,9 @@ export function FileSystemProvider({ children }) {
       
       const currentParent = prev[currentParentId];
       
+      // Ensure unique name in target folder
+      const uniqueName = calculateUniqueName(prev, targetFolderId, file.name, fileId);
+
       return {
         ...prev,
         [currentParentId]: {
@@ -659,6 +746,7 @@ export function FileSystemProvider({ children }) {
         },
         [fileId]: {
           ...file,
+          name: uniqueName, // Update name if needed
           // Reset position when moving to folder
           position: targetFolderId === 'desktop' ? file.position : undefined
         }
@@ -689,6 +777,7 @@ export function FileSystemProvider({ children }) {
             },
             [fileId]: {
                 ...file,
+                name: calculateUniqueName(prev, targetId, file.name, fileId), // Ensure unique upon restore
                 position: file.originalPosition || { x: 20, y: 20 }, // Restore position logic
                 originalParentId: undefined,
                 originalPosition: undefined

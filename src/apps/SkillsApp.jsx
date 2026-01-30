@@ -1,17 +1,17 @@
 const skills = [
   {
     category: 'Languages',
-    icon: '💾',
+    icon: '',
     items: ['Python', 'Java', 'C', 'C++', 'JavaScript', 'TypeScript', 'SQL', 'HTML/CSS'],
   },
   {
     category: 'Tools/Frameworks',
-    icon: '�',
+    icon: '',
     items: ['React.js', 'Next.js', 'React Native', 'Expo', 'Node.js', 'Express', 'FastAPI', 'PyTorch', 'Flask', 'Tailwind', 'NativeWind', 'Vite', 'Git', 'Vercel'],
   },
   {
     category: 'Cloud/Databases',
-    icon: '☁️',
+    icon: '',
     items: ['PostgreSQL', 'MySQL', 'Firebase', 'SQLite', 'SQLAlchemy', 'AWS', 'Google Cloud'],
   },
 ];
@@ -27,7 +27,7 @@ export default function SkillsApp() {
         paddingBottom: '8px',
         borderBottom: '2px solid #808080'
       }}>
-        <span style={{ fontSize: '24px' }}>💻</span>
+        <span style={{ fontSize: '24px' }}></span>
         <span style={{ fontWeight: 'bold' }}>My Computer - Skills & Technologies</span>
       </div>
 

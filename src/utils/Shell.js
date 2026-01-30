@@ -508,6 +508,7 @@ Available commands:
   grep pattern file - Search for pattern in file
   echo [text]       - Display text
   mkdir [name]      - Create directory
+  rmdir [name]      - Remove empty directory
   touch [name]      - Create empty file
   cp [-r] src dst   - Copy file or directory
   mv src dst        - Move/rename file or directory
@@ -756,6 +757,53 @@ Current time is: ${now.toLocaleTimeString()}
     // Alias for mkdir
     md: function(args) {
       return this.commands.mkdir.call(this, args);
+    },
+
+    // Remove empty directory
+    rmdir: (args) => {
+      const { positional } = parseArgs(args);
+
+      if (positional.length === 0) {
+        return { stdout: '', stderr: 'rmdir: missing operand', exitCode: 1 };
+      }
+
+      for (const dirPath of positional) {
+        const resolved = this.resolvePath(dirPath);
+        if (!resolved) {
+          return { stdout: '', stderr: `rmdir: failed to remove '${dirPath}': No such file or directory`, exitCode: 1 };
+        }
+
+        const file = this.fs.getFile(resolved.id);
+
+        // Must be a directory
+        if (file.type === 'file') {
+          return { stdout: '', stderr: `rmdir: failed to remove '${dirPath}': Not a directory`, exitCode: 1 };
+        }
+
+        // Can't remove system folders
+        if (file.type === 'system') {
+          return { stdout: '', stderr: `rmdir: failed to remove '${dirPath}': Permission denied`, exitCode: 1 };
+        }
+
+        // Must be empty
+        const contents = this.fs.getFolderContents(resolved.id);
+        if (contents.length > 0) {
+          return { stdout: '', stderr: `rmdir: failed to remove '${dirPath}': Directory not empty`, exitCode: 1 };
+        }
+
+        // Remove it
+        const parent = this.fs.findParent(resolved.id);
+        if (parent) {
+          this.fs.deleteFile(resolved.id, parent.id);
+        }
+      }
+
+      return { stdout: '', stderr: '', exitCode: 0 };
+    },
+
+    // Alias for rmdir
+    rd: function(args) {
+      return this.commands.rmdir.call(this, args);
     },
 
     // Create file

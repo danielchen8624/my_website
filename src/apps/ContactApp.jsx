@@ -2,35 +2,35 @@ export default function ContactApp() {
   const contacts = [
     {
       id: 'github',
-      icon: '🐙',
+      icon: '',
       label: 'GitHub',
       value: 'github.com/danielchen8624',
       link: 'https://github.com/danielchen8624',
     },
     {
       id: 'linkedin',
-      icon: '💼',
+      icon: '',
       label: 'LinkedIn',
       value: 'linkedin.com/in/danielchen0113',
       link: 'https://www.linkedin.com/in/daniel-chen0113/',
     },
     {
       id: 'email',
-      icon: '📧',
+      icon: '',
       label: 'Email',
       value: 'daniel.chen0113@gmail.com',
       link: 'mailto:daniel.chen0113@gmail.com',
     },
     {
       id: 'twitter',
-      icon: '🐦',
+      icon: '',
       label: 'Twitter/X',
       value: '@danielchen0113',
       link: 'https://x.com/danielchen0113'
     },
     {
       id: 'instagram',
-      icon: '📸',
+      icon: '',
       label: 'Instagram',
       value: '@daniel_c_hen',
       link: 'https://www.instagram.com/daniel_c_hen/'
