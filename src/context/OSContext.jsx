@@ -63,6 +63,7 @@ export function OSProvider({ children }) {
           y: 50 + offset 
         },
         size: { ...defaultSize },
+        allowMaximize: appType !== 'minesweeper' && appType !== 'run' && appType !== 'system-properties',
         // Store original size/position for restore after maximize
         preMaximizeState: null,
       };

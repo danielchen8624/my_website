@@ -29,7 +29,7 @@ import MinesweeperApp from './apps/MinesweeperApp';
 import SystemPropertiesApp from './apps/SystemPropertiesApp';
 
 // Render the appropriate app based on type
-function AppRenderer({ appType, fileId, onClose }) {
+function AppRenderer({ appType, fileId, onClose, windowId }) {
   switch (appType) {
     case 'notepad':
       return <NotepadApp fileId={fileId} />;
@@ -56,7 +56,7 @@ function AppRenderer({ appType, fileId, onClose }) {
     case 'resume':
       return <ResumeApp />;
     case 'minesweeper':
-      return <MinesweeperApp />;
+      return <MinesweeperApp windowId={windowId} />;
     case 'system-properties':
       return <SystemPropertiesApp />;
     case 'run':
@@ -160,12 +160,14 @@ function Desktop() {
             zIndex={window.zIndex}
             isActive={focusedWindowId === window.id}
             isMinimized={window.isMinimized}
+            allowMaximize={window.allowMaximize}
             onSave={() => handleSave(window.fileId)}
             onMenuAction={(action) => handleMenuAction(window.fileId, action)}
           >
             <AppRenderer 
               appType={window.appType} 
               fileId={window.fileId}
+              windowId={window.id}
               onClose={() => closeWindow(window.id)}
             />
           </Window>

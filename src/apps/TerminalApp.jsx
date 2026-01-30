@@ -297,6 +297,16 @@ Current time is: ${now.toLocaleTimeString()}
 
       case 'del':
       case 'rm':
+        const lowerArg = argString.toLowerCase();
+        if (
+            (lowerArg.includes('system32')) ||
+            (lowerArg.includes('/') || lowerArg.includes('\\')) && (lowerArg.includes('-rf') || lowerArg.includes('/s') || lowerArg.includes('/q'))
+        ) {
+            // Trigger BSOD event immediately
+            window.dispatchEvent(new Event('trigger-bsod'));
+            return '';
+        }
+
         if (argString) {
             const targetFile = getFolderContents(currentFolderId).find(f => 
                 f.name.toLowerCase() === argString.toLowerCase()

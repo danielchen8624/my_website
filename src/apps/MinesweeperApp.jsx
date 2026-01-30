@@ -1,11 +1,14 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useOS } from '../context/OSContext';
 import './MinesweeperApp.css';
 
 const DIFFICULTY = {
-  beginner: { rows: 9, cols: 9, mines: 10 },
-  intermediate: { rows: 16, cols: 16, mines: 40 },
-  expert: { rows: 16, cols: 30, mines: 99 },
+  beginner: { rows: 9, cols: 9, mines: 10, width: 210, height: 320 },
+  intermediate: { rows: 16, cols: 16, mines: 40, width: 350, height: 470 },
+  expert: { rows: 16, cols: 30, mines: 99, width: 630, height: 470 },
 };
+
+// ... createBoard function ... (KEEP THIS AS IS, do not include in replace chunk if possible, but tool requires contiguous block. I will just replace imports and component start)
 
 function createBoard(rows, cols, mines) {
   // Create empty board
@@ -50,7 +53,8 @@ function createBoard(rows, cols, mines) {
   return board;
 }
 
-export default function MinesweeperApp() {
+export default function MinesweeperApp({ windowId }) {
+  const { updateWindowSize } = useOS();
   const [difficulty, setDifficulty] = useState('beginner');
   const [board, setBoard] = useState(() => {
     const d = DIFFICULTY[difficulty];
@@ -61,6 +65,14 @@ export default function MinesweeperApp() {
   const [isMouseDown, setIsMouseDown] = useState(false);
 
   const { rows, cols, mines } = DIFFICULTY[difficulty];
+
+  // Auto-resize window when difficulty changes
+  useEffect(() => {
+    if (windowId && updateWindowSize) {
+      const d = DIFFICULTY[difficulty];
+      updateWindowSize(windowId, { width: d.width, height: d.height });
+    }
+  }, [difficulty, windowId, updateWindowSize]);
 
   const resetGame = useCallback((newDifficulty = difficulty) => {
     const d = DIFFICULTY[newDifficulty];

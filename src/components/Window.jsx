@@ -15,6 +15,7 @@ export default function Window({
   onMenuAction,
   hideMenuBar = false,
   isMinimized = false,
+  allowMaximize = true,
 }) {
   const { closeWindow, minimizeWindow, focusWindow, updateWindowPosition, maximizeWindow, windows } = useOS();
   const windowRef = useRef(null);
@@ -72,8 +73,8 @@ export default function Window({
 
   // Double-click header to maximize
   const handleHeaderDoubleClick = useCallback(() => {
-    maximizeWindow(id);
-  }, [maximizeWindow, id]);
+    if (allowMaximize) maximizeWindow(id);
+  }, [maximizeWindow, id, allowMaximize]);
 
   // Menu handlers
   const handleMenuClick = (menuName) => {
@@ -160,11 +161,13 @@ export default function Window({
           {/* Maximize Button */}
           <button 
             className="window-control-btn"
+            disabled={!allowMaximize}
             onClick={(e) => {
               e.stopPropagation();
-              maximizeWindow(id);
+              if (allowMaximize) maximizeWindow(id);
             }}
             aria-label={isMaximized ? "Restore" : "Maximize"}
+            style={{ opacity: allowMaximize ? 1 : 0.5 }}
           >
             <span>{isMaximized ? '❐' : '□'}</span>
           </button>
