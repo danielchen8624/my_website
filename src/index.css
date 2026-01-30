@@ -155,6 +155,34 @@ body {
   overflow: hidden;
 }
 
+/* Marquee Selection Box */
+.selection-box {
+  position: absolute;
+  border: 1px dotted #ffffff;
+  background-color: rgba(0, 0, 128, 0.3);
+  pointer-events: none;
+  z-index: 50;
+}
+
+/* Window Snap Ghost */
+.snap-ghost {
+  position: fixed;
+  background-color: rgba(0, 0, 128, 0.3);
+  border: 3px solid rgba(0, 0, 128, 0.6);
+  pointer-events: none;
+  z-index: 9999;
+  animation: snapGhostPulse 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes snapGhostPulse {
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 0.8;
+  }
+}
+
 .desktop-icons {
   display: flex;
   flex-direction: column;

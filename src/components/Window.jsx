@@ -1,13 +1,13 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { useOS } from '../context/OSContext';
 
-export default function Window({ 
-  id, 
-  title, 
-  icon, 
-  children, 
-  position, 
-  size, 
+export default function Window({
+  id,
+  title,
+  icon,
+  children,
+  position,
+  size,
   zIndex,
   isActive,
   // Menu handlers passed from parent
@@ -17,15 +17,19 @@ export default function Window({
   isMinimized = false,
   allowMaximize = true,
 }) {
-  const { closeWindow, minimizeWindow, focusWindow, updateWindowPosition, maximizeWindow, windows } = useOS();
+  const { closeWindow, minimizeWindow, focusWindow, updateWindowPosition, updateWindowSize, maximizeWindow, windows } = useOS();
   const windowRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [activeMenu, setActiveMenu] = useState(null);
-  
+  const [snapZone, setSnapZone] = useState(null); // 'left', 'right', or null
+
   // Find if this window is maximized
   const windowState = windows.find(w => w.id === id);
   const isMaximized = windowState?.isMaximized || false;
+
+  // Snap zone detection threshold (pixels from edge)
+  const SNAP_THRESHOLD = 20;
 
   // Handle mouse down on header (start drag)
   const handleMouseDown = useCallback((e) => {
@@ -42,7 +46,7 @@ export default function Window({
     });
   }, [focusWindow, id, isMaximized]);
 
-  // Handle mouse move (dragging)
+  // Handle mouse move (dragging) with snap detection
   useEffect(() => {
     if (!isDragging) return;
 
@@ -50,9 +54,37 @@ export default function Window({
       const newX = Math.max(0, e.clientX - dragOffset.x);
       const newY = Math.max(0, e.clientY - dragOffset.y);
       updateWindowPosition(id, { x: newX, y: newY });
+
+      // Detect snap zones (only if maximize is allowed)
+      if (allowMaximize) {
+        const screenWidth = window.innerWidth;
+
+        if (e.clientX <= SNAP_THRESHOLD) {
+          setSnapZone('left');
+        } else if (e.clientX >= screenWidth - SNAP_THRESHOLD) {
+          setSnapZone('right');
+        } else {
+          setSnapZone(null);
+        }
+      }
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = (e) => {
+      // Apply snap if in a snap zone
+      if (snapZone && allowMaximize) {
+        const screenWidth = window.innerWidth;
+        const screenHeight = window.innerHeight - 40; // Account for taskbar
+
+        if (snapZone === 'left') {
+          updateWindowPosition(id, { x: 0, y: 0 });
+          updateWindowSize(id, { width: screenWidth / 2, height: screenHeight });
+        } else if (snapZone === 'right') {
+          updateWindowPosition(id, { x: screenWidth / 2, y: 0 });
+          updateWindowSize(id, { width: screenWidth / 2, height: screenHeight });
+        }
+      }
+
+      setSnapZone(null);
       setIsDragging(false);
     };
 
@@ -63,7 +95,7 @@ export default function Window({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, dragOffset, id, updateWindowPosition]);
+  }, [isDragging, dragOffset, id, updateWindowPosition, updateWindowSize, snapZone, allowMaximize]);
 
   // Handle window focus when clicking anywhere on window
   const handleWindowClick = useCallback(() => {
@@ -127,13 +159,48 @@ export default function Window({
     zIndex: zIndex,
   };
 
+  // Calculate snap ghost position
+  const getSnapGhostStyle = () => {
+    if (!snapZone) return null;
+
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight - 40;
+
+    if (snapZone === 'left') {
+      return {
+        left: 0,
+        top: 0,
+        width: screenWidth / 2,
+        height: screenHeight,
+      };
+    } else if (snapZone === 'right') {
+      return {
+        left: screenWidth / 2,
+        top: 0,
+        width: screenWidth / 2,
+        height: screenHeight,
+      };
+    }
+    return null;
+  };
+
+  const snapGhostStyle = getSnapGhostStyle();
+
   return (
-    <div
-      ref={windowRef}
-      className={`window ${isMaximized ? 'maximized' : ''}`}
-      style={windowStyle}
-      onClick={handleWindowClick}
-    >
+    <>
+      {/* Snap Ghost Overlay */}
+      {snapZone && snapGhostStyle && (
+        <div
+          className="snap-ghost"
+          style={snapGhostStyle}
+        />
+      )}
+      <div
+        ref={windowRef}
+        className={`window ${isMaximized ? 'maximized' : ''}`}
+        style={windowStyle}
+        onClick={handleWindowClick}
+      >
       {/* Title Bar */}
       <div 
         className={`window-header ${isActive ? '' : 'inactive'}`}
@@ -287,6 +354,7 @@ export default function Window({
           {children}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

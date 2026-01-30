@@ -5,14 +5,15 @@ import { setSelectedFile } from '../components/KeyboardShortcuts';
 
 export default function ExplorerApp({ folderId = 'desktop' }) {
   const { openWindow } = useOS();
-  const { 
-    getFilesInFolder, 
-    getFile, 
-    moveFileToFolder, 
-    renameFile, 
+  const {
+    getFilesInFolder,
+    getFile,
+    moveFileToFolder,
+    renameFile,
     getFilePath,
     findFileByPath,
-    getFolderContents 
+    getFolderContents,
+    findParent
   } = useFileSystem();
   
   // Current folder ID (can change via navigation)
@@ -23,7 +24,7 @@ export default function ExplorerApp({ folderId = 'desktop' }) {
   const [isDropTarget, setIsDropTarget] = useState(false);
   const [addressValue, setAddressValue] = useState('');
   const [isEditingAddress, setIsEditingAddress] = useState(false);
-  const [expandedFolders, setExpandedFolders] = useState(['desktop']);
+  const [expandedFolders, setExpandedFolders] = useState(['desktop', 'my-computer']);
   
   const lastClickTimeRef = useRef(0);
   const lastClickIdRef = useRef(null);
@@ -33,8 +34,15 @@ export default function ExplorerApp({ folderId = 'desktop' }) {
   
   // Update address bar when folder changes
   useEffect(() => {
-    const path = getFilePath(currentFolderId);
-    setAddressValue(path);
+    // Special paths for system folders
+    if (currentFolderId === 'my-computer') {
+      setAddressValue('My Computer');
+    } else if (currentFolderId === 'control-panel') {
+      setAddressValue('My Computer\\Control Panel');
+    } else {
+      const path = getFilePath(currentFolderId);
+      setAddressValue(path);
+    }
   }, [currentFolderId, getFilePath]);
 
   // Navigation history for back button
@@ -91,16 +99,40 @@ export default function ExplorerApp({ folderId = 'desktop' }) {
   // Go up to parent folder
   const goUp = useCallback(() => {
     if (currentFolderId !== 'desktop') {
-      // Find parent
-      const file = getFile(currentFolderId);
-      // Simple approach: navigate to desktop (could be enhanced)
-      navigateTo('desktop');
+      // Special handling for system folders
+      if (currentFolderId === 'control-panel') {
+        navigateTo('my-computer'); // Go back to My Computer
+      } else if (currentFolderId === 'my-computer') {
+        navigateTo('desktop'); // Go back to Desktop from My Computer
+      } else {
+        // Find parent for regular folders
+        const parent = findParent(currentFolderId);
+        if (parent) {
+          navigateTo(parent.id);
+        } else {
+          navigateTo('desktop');
+        }
+      }
     }
-  }, [currentFolderId, getFile, navigateTo]);
+  }, [currentFolderId, navigateTo, findParent]);
 
   // Handle double-click to open
   const handleDoubleClick = useCallback((file) => {
     if (file.type === 'folder') {
+      navigateTo(file.id);
+    } else if (file.type === 'drive') {
+      // Drive C: navigates to desktop (root file system)
+      if (file.id === 'drive-c') {
+        navigateTo('desktop');
+      } else if (file.id === 'drive-d') {
+        // CD Drive - show empty or message
+        alert('Please insert a disc');
+      }
+    } else if (file.type === 'system-folder') {
+      // System folders like Control Panel navigate into them
+      navigateTo(file.id);
+    } else if (file.type === 'system' && file.children) {
+      // System items with children (like My Computer) navigate into them
       navigateTo(file.id);
     } else {
       openWindow(file.id, file);
@@ -256,23 +288,24 @@ export default function ExplorerApp({ folderId = 'desktop' }) {
   const renderFolderTree = useCallback((parentId, depth = 0) => {
     const folder = getFile(parentId);
     if (!folder) return null;
-    
+
+    // Get navigable children (folders, system folders, drives)
     const childFolders = (folder.children || [])
       .map(id => getFile(id))
-      .filter(f => f && (f.type === 'folder'));
-    
+      .filter(f => f && (f.type === 'folder' || f.type === 'system-folder' || (f.type === 'system' && f.children)));
+
     const isExpanded = expandedFolders.includes(parentId);
     const isCurrentFolder = parentId === currentFolderId;
-    
+
     return (
       <div key={parentId}>
-        <div 
+        <div
           className={`sidebar-folder ${isCurrentFolder ? 'active' : ''}`}
           style={{ paddingLeft: `${depth * 12 + 4}px` }}
           onClick={() => navigateTo(parentId)}
         >
           {childFolders.length > 0 && (
-            <span 
+            <span
               className="folder-toggle"
               onClick={(e) => { e.stopPropagation(); toggleFolderExpansion(parentId); }}
             >

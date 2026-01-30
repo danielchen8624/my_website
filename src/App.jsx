@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { OSProvider, useOS } from './context/OSContext';
 import { FileSystemProvider, useFileSystem } from './context/FileSystemContext';
 import Window from './components/Window';
@@ -38,7 +38,7 @@ function AppRenderer({ appType, fileId, onClose, windowId }) {
     case 'explorer':
       return <ExplorerApp folderId={fileId} />;
     case 'mycomputer':
-      return <ExplorerApp folderId="desktop" />;
+      return <ExplorerApp folderId="my-computer" />;
     case 'browser':
       return <InternetExplorerApp />;
     case 'recyclebin':
@@ -71,6 +71,170 @@ function Desktop() {
   const { getDesktopFiles, getFile, moveFileToFolder, moveFile } = useFileSystem();
   const focusedWindowId = getFocusedWindowId();
   const desktopFiles = getDesktopFiles();
+  const desktopRef = useRef(null);
+
+  // Marquee selection state - use refs to avoid stale closures
+  const [selectedFileIds, setSelectedFileIds] = useState([]);
+  const [selectionBox, setSelectionBox] = useState(null); // { left, top, width, height } or null
+  const isSelectingRef = useRef(false);
+  const justFinishedSelectingRef = useRef(false); // Prevent click from clearing selection
+  const selectionStartRef = useRef({ x: 0, y: 0 });
+  const selectionCurrentRef = useRef({ x: 0, y: 0 });
+
+  // Store selected file IDs globally for multi-icon dragging
+  useEffect(() => {
+    window.__selectedFileIds = selectedFileIds;
+  }, [selectedFileIds]);
+
+  // Check if two rectangles intersect
+  const rectsIntersect = (rect1, rect2) => {
+    return !(
+      rect1.left + rect1.width < rect2.left ||
+      rect2.left + rect2.width < rect1.left ||
+      rect1.top + rect1.height < rect2.top ||
+      rect2.top + rect2.height < rect1.top
+    );
+  };
+
+  // Handle mouse down on desktop background (start selection)
+  const handleSelectionStart = (e) => {
+    // Don't start selection if clicking on an icon, window, or taskbar
+    if (e.target.closest('.desktop-icon') ||
+        e.target.closest('.window') ||
+        e.target.closest('.taskbar') ||
+        e.target.closest('.start-menu') ||
+        e.target.closest('.context-menu')) {
+      return;
+    }
+
+    const desktop = desktopRef.current;
+    if (!desktop) return;
+
+    const rect = desktop.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    isSelectingRef.current = true;
+    selectionStartRef.current = { x, y };
+    selectionCurrentRef.current = { x, y };
+    setSelectionBox(null);
+  };
+
+  // Global mouse event listeners for selection
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isSelectingRef.current) return;
+
+      const desktop = desktopRef.current;
+      if (!desktop) return;
+
+      const rect = desktop.getBoundingClientRect();
+      const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+      const y = Math.max(0, Math.min(e.clientY - rect.top, rect.height - 40));
+
+      selectionCurrentRef.current = { x, y };
+
+      const start = selectionStartRef.current;
+      const current = selectionCurrentRef.current;
+
+      setSelectionBox({
+        left: Math.min(start.x, current.x),
+        top: Math.min(start.y, current.y),
+        width: Math.abs(current.x - start.x),
+        height: Math.abs(current.y - start.y)
+      });
+    };
+
+    const handleMouseUp = (e) => {
+      if (!isSelectingRef.current) {
+        return;
+      }
+
+      isSelectingRef.current = false;
+
+      const desktop = desktopRef.current;
+      if (!desktop) {
+        setSelectionBox(null);
+        return;
+      }
+
+      const start = selectionStartRef.current;
+      const current = selectionCurrentRef.current;
+      const box = {
+        left: Math.min(start.x, current.x),
+        top: Math.min(start.y, current.y),
+        width: Math.abs(current.x - start.x),
+        height: Math.abs(current.y - start.y)
+      };
+
+      // Only process if selection box has some size (was a drag, not just a click)
+      if (box.width > 5 && box.height > 5) {
+        const selectedIds = [];
+        const desktopRect = desktop.getBoundingClientRect();
+
+        // Check each desktop icon for intersection using DOM query
+        const iconElements = document.querySelectorAll('.desktop-icon[data-file-id]');
+        iconElements.forEach(iconEl => {
+          const fileId = iconEl.getAttribute('data-file-id');
+          const iconRect = iconEl.getBoundingClientRect();
+
+          // Convert icon rect to desktop-relative coordinates
+          const iconBox = {
+            left: iconRect.left - desktopRect.left,
+            top: iconRect.top - desktopRect.top,
+            width: iconRect.width,
+            height: iconRect.height
+          };
+
+          if (rectsIntersect(box, iconBox)) {
+            selectedIds.push(fileId);
+          }
+        });
+
+        setSelectedFileIds(selectedIds);
+        window.dispatchEvent(new CustomEvent('desktopSelection', {
+          detail: { selectedIds }
+        }));
+
+        // Mark that we just finished selecting (prevent click from clearing)
+        if (selectedIds.length > 0) {
+          justFinishedSelectingRef.current = true;
+          setTimeout(() => { justFinishedSelectingRef.current = false; }, 100);
+        }
+      } else {
+        // It was just a click, clear selection
+        setSelectedFileIds([]);
+        window.dispatchEvent(new CustomEvent('desktopSelection', {
+          detail: { selectedIds: [] }
+        }));
+      }
+
+      // Clear the visual selection box
+      setSelectionBox(null);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []); // Empty deps - handlers use refs for state
+
+  // Clear selection when clicking on empty desktop area
+  const handleDesktopClick = (e) => {
+    // Don't clear if we just finished a marquee selection
+    if (justFinishedSelectingRef.current) return;
+
+    if (!e.target.closest('.desktop-icon') &&
+        !e.target.closest('.window')) {
+      setSelectedFileIds([]);
+      window.dispatchEvent(new CustomEvent('desktopSelection', {
+        detail: { selectedIds: [] }
+      }));
+    }
+  };
 
   // Apply saved wallpaper on load
   useEffect(() => {
@@ -135,14 +299,30 @@ function Desktop() {
   };
 
   return (
-    <div 
+    <div
+      ref={desktopRef}
       className="desktop"
       onDrop={handleDesktopDrop}
       onDragOver={handleDesktopDragOver}
+      onMouseDown={handleSelectionStart}
+      onClick={handleDesktopClick}
     >
+      {/* Marquee Selection Box */}
+      {selectionBox && selectionBox.width > 2 && selectionBox.height > 2 && (
+        <div
+          className="selection-box"
+          style={{
+            left: selectionBox.left,
+            top: selectionBox.top,
+            width: selectionBox.width,
+            height: selectionBox.height,
+          }}
+        />
+      )}
+
       {/* Desktop Icons from File System */}
       {desktopFiles.map((file) => (
-        <DesktopIcon key={file.id} file={file} />
+        <DesktopIcon key={file.id} file={file} isSelected={selectedFileIds.includes(file.id)} />
       ))}
 
       {/* Windows */}

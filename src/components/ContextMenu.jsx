@@ -3,14 +3,24 @@ import { useOS } from '../context/OSContext';
 import { useFileSystem } from '../context/FileSystemContext';
 
 export default function ContextMenu() {
-  const { openWindow } = useOS();
-  const { createFolder, createTextFile, deleteFile, copyFile, cutFile, pasteFile, clipboard, getFile } = useFileSystem();
-  
+  const { openWindow, windows, minimizeWindow } = useOS();
+  const { createFolder, createTextFile, deleteFile, copyFile, cutFile, pasteFile, clipboard, getFile, resetFileSystem } = useFileSystem();
+
   const [isVisible, setIsVisible] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [targetType, setTargetType] = useState('desktop'); // 'desktop', 'file', 'folder', 'folder-background'
+  const [targetType, setTargetType] = useState('desktop'); // 'desktop', 'file', 'folder', 'folder-background', 'taskbar'
   const [targetId, setTargetId] = useState(null);
   const [currentFolderId, setCurrentFolderId] = useState('desktop');
+  const [selectedFileIds, setSelectedFileIds] = useState([]);
+
+  // Listen for desktop selection changes
+  useEffect(() => {
+    const handleDesktopSelection = (e) => {
+      setSelectedFileIds(e.detail.selectedIds || []);
+    };
+    window.addEventListener('desktopSelection', handleDesktopSelection);
+    return () => window.removeEventListener('desktopSelection', handleDesktopSelection);
+  }, []);
 
   // Handle right-click
   const handleContextMenu = useCallback((e) => {
@@ -52,6 +62,10 @@ export default function ContextMenu() {
       setTargetType('folder-background');
       setTargetId(null);
       setCurrentFolderId(folderId);
+    } else if (e.target.closest('.taskbar') && !e.target.closest('.start-button')) {
+      setTargetType('taskbar');
+      setTargetId(null);
+      setCurrentFolderId('desktop');
     } else if (e.target.closest('.desktop')) {
       setTargetType('desktop');
       setTargetId(null);
@@ -107,12 +121,18 @@ export default function ContextMenu() {
         }
         break;
       case 'copy':
-        if (targetId) {
+        // If multiple files are selected, copy all of them
+        if (selectedFileIds.length > 0 && selectedFileIds.includes(targetId)) {
+          copyFile(selectedFileIds);
+        } else if (targetId) {
           copyFile(targetId);
         }
         break;
       case 'cut':
-        if (targetId) {
+        // If multiple files are selected, cut all of them
+        if (selectedFileIds.length > 0 && selectedFileIds.includes(targetId)) {
+          cutFile(selectedFileIds);
+        } else if (targetId) {
           cutFile(targetId);
         }
         break;
@@ -130,7 +150,7 @@ export default function ContextMenu() {
         }
         break;
       case 'properties':
-        if (targetId === 'mycomputer') {
+        if (targetId === 'my-computer') {
           openWindow('system-properties', {
              id: 'system-properties',
              name: 'System Properties',
@@ -139,7 +159,7 @@ export default function ContextMenu() {
              width: 400,
              height: 480,
           });
-        } else if (targetType === 'desktop' || targetType === 'folder-background') {
+        } else if (targetType === 'desktop' || targetType === 'folder-background' || targetType === 'taskbar') {
              openWindow('display', {
               id: 'display',
               name: 'Display Properties',
@@ -151,6 +171,18 @@ export default function ContextMenu() {
              alert('Properties not available for this item.');
         }
         break;
+      case 'refresh':
+        // Force re-render by triggering a state update
+        window.dispatchEvent(new CustomEvent('refreshDesktop'));
+        break;
+      case 'minimizeAll':
+        // Minimize all open windows
+        windows.forEach(w => {
+          if (!w.isMinimized) {
+            minimizeWindow(w.id);
+          }
+        });
+        break;
       default:
         break;
     }
@@ -161,6 +193,24 @@ export default function ContextMenu() {
 
   // Render different menus based on target
   const renderMenuItems = () => {
+    // Taskbar context menu
+    if (targetType === 'taskbar') {
+      return (
+        <>
+          <div className="context-menu-item" onClick={() => handleAction('minimizeAll')}>
+            <span className="context-menu-icon">🗕</span>
+            <span>Minimize All Windows</span>
+          </div>
+          <div className="context-menu-divider" />
+          <div className="context-menu-item" onClick={() => handleAction('properties')}>
+            <span className="context-menu-icon">⚙️</span>
+            <span>Properties</span>
+          </div>
+        </>
+      );
+    }
+
+    // Desktop and folder background context menu
     if (targetType === 'desktop' || targetType === 'folder-background') {
       return (
         <>
@@ -179,6 +229,10 @@ export default function ContextMenu() {
               <span>Paste</span>
             </div>
           )}
+          <div className="context-menu-item" onClick={() => handleAction('refresh')}>
+            <span className="context-menu-icon">🔄</span>
+            <span>Refresh</span>
+          </div>
           <div className="context-menu-divider" />
           <div className="context-menu-item" onClick={() => handleAction('properties')}>
             <span className="context-menu-icon">⚙️</span>

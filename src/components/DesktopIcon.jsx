@@ -3,22 +3,27 @@ import { useOS } from '../context/OSContext';
 import { useFileSystem } from '../context/FileSystemContext';
 import { setSelectedFile } from './KeyboardShortcuts';
 
-export default function DesktopIcon({ file }) {
+export default function DesktopIcon({ file, isSelected: isSelectedProp = false }) {
   const { openWindow } = useOS();
-  const { renameFile, moveFile, moveFileToFolder, getDesktopFiles } = useFileSystem();
-  
+  const { renameFile, moveFile, moveFileToFolder, getDesktopFiles, getFile } = useFileSystem();
+
   const [isRenaming, setIsRenaming] = useState(false);
   const [newName, setNewName] = useState(file.name);
-  const [isSelected, setIsSelected] = useState(false);
+  const [isSelectedLocal, setIsSelectedLocal] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isDropTarget, setIsDropTarget] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  
+
+  // Combine local selection with prop-based selection (marquee)
+  const isSelected = isSelectedLocal || isSelectedProp;
+
   const iconRef = useRef(null);
   const inputRef = useRef(null);
   const lastClickTimeRef = useRef(0);
   const dragStartPosRef = useRef({ x: 0, y: 0 });
+  const lastMousePosRef = useRef({ x: 0, y: 0 });
   const hasDraggedRef = useRef(false);
+  const isGroupDragRef = useRef(false);
   const DRAG_THRESHOLD = 5; // pixels
 
   // Focus input when renaming
@@ -37,10 +42,24 @@ export default function DesktopIcon({ file }) {
         setNewName(file.name);
       }
     };
-    
+
     window.addEventListener('startRename', handleStartRename);
     return () => window.removeEventListener('startRename', handleStartRename);
   }, [file.id, file.name]);
+
+  // Listen for desktop selection events (marquee selection)
+  useEffect(() => {
+    const handleDesktopSelection = (e) => {
+      const { selectedIds } = e.detail;
+      // Clear local selection if marquee selection is happening
+      if (selectedIds.length > 0 && !selectedIds.includes(file.id)) {
+        setIsSelectedLocal(false);
+      }
+    };
+
+    window.addEventListener('desktopSelection', handleDesktopSelection);
+    return () => window.removeEventListener('desktopSelection', handleDesktopSelection);
+  }, [file.id]);
 
   // Handle double-click to open
   const handleDoubleClick = useCallback(() => {
@@ -67,7 +86,7 @@ export default function DesktopIcon({ file }) {
         setNewName(file.name);
       }
     } else {
-      setIsSelected(true);
+      setIsSelectedLocal(true);
       setSelectedFile(file.id, 'desktop');
     }
     
@@ -124,19 +143,35 @@ export default function DesktopIcon({ file }) {
   const handleMouseDown = useCallback((e) => {
     if (isRenaming) return;
     if (e.button !== 0) return; // Only left click
-    
-    setIsSelected(true);
-    
+
+    // Check if this icon is part of a multi-selection
+    const selectedIds = window.__selectedFileIds || [];
+    const isPartOfSelection = selectedIds.includes(file.id);
+
+    if (isPartOfSelection && selectedIds.length > 1) {
+      // Dragging a group - keep the selection
+      isGroupDragRef.current = true;
+    } else {
+      // Not part of selection or single selection - select only this icon
+      isGroupDragRef.current = false;
+      setIsSelectedLocal(true);
+      // Clear other selections and select only this one
+      window.dispatchEvent(new CustomEvent('desktopSelection', {
+        detail: { selectedIds: [file.id] }
+      }));
+    }
+
     // Record start position for threshold check
     dragStartPosRef.current = { x: e.clientX, y: e.clientY };
+    lastMousePosRef.current = { x: e.clientX, y: e.clientY };
     hasDraggedRef.current = false;
-    
+
     // Set dragging state (but actual visual dragging starts after threshold)
     setIsDragging(true);
-    
+
     // Emit for cross-window drop
     window.__draggingFileId = file.id;
-    
+
     const rect = iconRef.current.getBoundingClientRect();
     setDragOffset({
       x: e.clientX - rect.left,
@@ -152,38 +187,53 @@ export default function DesktopIcon({ file }) {
       // Check if we've exceeded drag threshold
       const dx = Math.abs(e.clientX - dragStartPosRef.current.x);
       const dy = Math.abs(e.clientY - dragStartPosRef.current.y);
-      
+
       if (dx < DRAG_THRESHOLD && dy < DRAG_THRESHOLD) {
         return; // Haven't moved enough to be a drag
       }
-      
+
       hasDraggedRef.current = true;
-      
+
       const desktop = document.querySelector('.desktop');
       if (!desktop) return;
-      
+
       const desktopRect = desktop.getBoundingClientRect();
-      let newX = e.clientX - desktopRect.left - dragOffset.x;
-      let newY = e.clientY - desktopRect.top - dragOffset.y;
-      
-      // Constrain to desktop bounds
-      newX = Math.max(0, Math.min(newX, desktopRect.width - 80));
-      newY = Math.max(0, Math.min(newY, desktopRect.height - 80));
-      
-      // Update position in real-time
-      if (iconRef.current) {
-        iconRef.current.style.left = `${newX}px`;
-        iconRef.current.style.top = `${newY}px`;
-      }
-      
-      // Check for drop targets (desktop icons and open explorer windows)
+
+      // Calculate delta from last mouse position
+      const deltaX = e.clientX - lastMousePosRef.current.x;
+      const deltaY = e.clientY - lastMousePosRef.current.y;
+      lastMousePosRef.current = { x: e.clientX, y: e.clientY };
+
+      // Get all selected file IDs
+      const selectedIds = isGroupDragRef.current ? (window.__selectedFileIds || [file.id]) : [file.id];
+
+      // Move all selected icons visually
+      selectedIds.forEach(selectedId => {
+        const iconEl = document.querySelector(`[data-file-id="${selectedId}"]`);
+        if (iconEl) {
+          const currentLeft = parseFloat(iconEl.style.left) || 0;
+          const currentTop = parseFloat(iconEl.style.top) || 0;
+
+          let newX = currentLeft + deltaX;
+          let newY = currentTop + deltaY;
+
+          // Constrain to desktop bounds
+          newX = Math.max(0, Math.min(newX, desktopRect.width - 80));
+          newY = Math.max(0, Math.min(newY, desktopRect.height - 80));
+
+          iconEl.style.left = `${newX}px`;
+          iconEl.style.top = `${newY}px`;
+        }
+      });
+
+      // Check for drop targets (only for single icon drag or folder targets)
       const targetId = checkDropTarget(e.clientX, e.clientY);
-      
+
       // Highlight drop target
       document.querySelectorAll('.desktop-icon').forEach(el => {
         el.classList.remove('drop-target');
       });
-      
+
       if (targetId) {
         const targetElement = document.querySelector(`[data-file-id="${targetId}"]`);
         if (targetElement) {
@@ -194,48 +244,57 @@ export default function DesktopIcon({ file }) {
 
     const handleMouseUp = (e) => {
       setIsDragging(false);
-      
+
       // Clear global drag state
       window.__draggingFileId = null;
-      
+
       // Clear drop target highlights
       document.querySelectorAll('.desktop-icon').forEach(el => {
         el.classList.remove('drop-target');
       });
-      
+
       // If we didn't actually drag, don't update position
       if (!hasDraggedRef.current) {
         return;
       }
-      
-      // Check if dropped on a folder/recycle bin
+
+      const desktop = document.querySelector('.desktop');
+      if (!desktop) return;
+
+      const desktopRect = desktop.getBoundingClientRect();
+
+      // Get all selected file IDs
+      const selectedIds = isGroupDragRef.current ? (window.__selectedFileIds || [file.id]) : [file.id];
+
+      // Check if dropped on a folder/recycle bin (only for single file or if target accepts multiple)
       const targetId = checkDropTarget(e.clientX, e.clientY);
-      
+
       if (targetId) {
-        // Move file to the target folder/bin
-        moveFileToFolder(file.id, targetId);
+        // Move all selected files to the target folder/bin
+        selectedIds.forEach(selectedId => {
+          moveFileToFolder(selectedId, targetId);
+        });
       } else {
-        // Regular position update
-        const desktop = document.querySelector('.desktop');
-        if (!desktop) return;
-        
-        const desktopRect = desktop.getBoundingClientRect();
-        let newX = e.clientX - desktopRect.left - dragOffset.x;
-        let newY = e.clientY - desktopRect.top - dragOffset.y;
-        
-        newX = Math.max(0, Math.min(newX, desktopRect.width - 80));
-        newY = Math.max(0, Math.min(newY, desktopRect.height - 80));
-        
-        moveFile(file.id, newX, newY);
+        // Regular position update for all selected icons
+        selectedIds.forEach(selectedId => {
+          const iconEl = document.querySelector(`[data-file-id="${selectedId}"]`);
+          if (iconEl) {
+            const newX = parseFloat(iconEl.style.left) || 0;
+            const newY = parseFloat(iconEl.style.top) || 0;
+            moveFile(selectedId, newX, newY);
+          }
+        });
       }
+
+      isGroupDragRef.current = false;
     };
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
 
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
     };
   }, [isDragging, dragOffset, file.id, moveFile, moveFileToFolder, checkDropTarget]);
 
@@ -243,7 +302,7 @@ export default function DesktopIcon({ file }) {
   useEffect(() => {
     const handleGlobalClick = (e) => {
       if (!iconRef.current?.contains(e.target)) {
-        setIsSelected(false);
+        setIsSelectedLocal(false);
         if (isRenaming) {
           handleRenameSubmit();
         }

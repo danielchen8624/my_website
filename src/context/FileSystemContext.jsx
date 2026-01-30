@@ -4,25 +4,93 @@ import { createContext, useContext, useState, useCallback, useEffect } from 'rea
 const FileSystemContext = createContext(null);
 
 // Storage key for localStorage
-// Storage key for localStorage
-// Storage key for localStorage
-const STORAGE_KEY = 'retro-os-filesystem-v3';
+const STORAGE_KEY = 'retro-os-filesystem-v4';
 
-// Default file system structure
+// Default file system structure - Windows 95 hierarchy
+// Desktop is the root, contains My Computer, Recycle Bin, My Documents, and user files
 const DEFAULT_FILES = {
   'desktop': {
     id: 'desktop',
     name: 'Desktop',
     type: 'folder',
     icon: '🖥️',
-    children: ['about', 'projects', 'skills-file', 'resume', 'skills', 'contact', 'readme', 'recycle-bin'],
+    // Desktop children: system items + user files
+    children: ['my-computer', 'recycle-bin', 'my-documents', 'about', 'projects', 'skills-file', 'resume', 'contact', 'readme'],
+  },
+  // My Computer - contains drives and control panel
+  'my-computer': {
+    id: 'my-computer',
+    name: 'My Computer',
+    type: 'system',
+    icon: '💻',
+    position: { x: 20, y: 10 },
+    children: ['drive-c', 'drive-d', 'control-panel'],
+    appType: 'mycomputer',
+  },
+  'drive-c': {
+    id: 'drive-c',
+    name: '(C:) Local Disk',
+    type: 'drive',
+    icon: '🖴',
+  },
+  'drive-d': {
+    id: 'drive-d',
+    name: '(D:) CD Drive',
+    type: 'drive',
+    icon: '💿',
+  },
+  'control-panel': {
+    id: 'control-panel',
+    name: 'Control Panel',
+    type: 'system-folder',
+    icon: '⚙️',
+    children: ['display-settings', 'sound-settings', 'network-settings'],
+  },
+  'display-settings': {
+    id: 'display-settings',
+    name: 'Display',
+    type: 'system',
+    icon: '🖥️',
+    appType: 'properties',
+  },
+  'sound-settings': {
+    id: 'sound-settings',
+    name: 'Sound',
+    type: 'system',
+    icon: '🔊',
+  },
+  'network-settings': {
+    id: 'network-settings',
+    name: 'Network',
+    type: 'system',
+    icon: '🌐',
+  },
+  // Recycle Bin
+  'recycle-bin': {
+    id: 'recycle-bin',
+    name: 'Recycle Bin',
+    type: 'system',
+    icon: '🗑️',
+    position: { x: 20, y: 85 },
+    children: [],
+    appType: 'recyclebin',
+  },
+  // My Documents folder
+  'my-documents': {
+    id: 'my-documents',
+    name: 'My Documents',
+    type: 'folder',
+    icon: '📁',
+    position: { x: 20, y: 160 },
+    children: [],
+    appType: 'explorer',
   },
   'about': {
     id: 'about',
     name: 'About Me.txt',
     type: 'file',
     icon: '📝',
-    position: { x: 20, y: 10 },
+    position: { x: 20, y: 235 },
     content: `╔══════════════════════════════════════════════════════════╗
 ║                    ABOUT ME                                ║
 ╚══════════════════════════════════════════════════════════╝
@@ -53,7 +121,7 @@ Thanks for visiting! Feel free to explore.
     name: 'My Projects',
     type: 'folder',
     icon: '📁',
-    position: { x: 20, y: 85 },
+    position: { x: 20, y: 310 },
     children: ['project-1', 'project-2', 'project-3'],
     appType: 'explorer',
   },
@@ -62,7 +130,7 @@ Thanks for visiting! Feel free to explore.
     name: 'My Skills.txt',
     type: 'file',
     icon: '📝',
-    position: { x: 20, y: 160 },
+    position: { x: 20, y: 385 },
     content: `╔══════════════════════════════════════════════════════════╗
 ║              MY SKILLS & TECHNOLOGIES                    ║
 ╚══════════════════════════════════════════════════════════╝
@@ -103,23 +171,15 @@ Thanks for visiting! Feel free to explore.
     name: 'Resume.doc',
     type: 'file',
     icon: '📄',
-    position: { x: 20, y: 235 },
+    position: { x: 20, y: 460 },
     appType: 'resume',
-  },
-  'skills': {
-    id: 'skills',
-    name: 'My Computer',
-    type: 'system',
-    icon: '💻',
-    position: { x: 20, y: 310 },
-    appType: 'mycomputer',
   },
   'contact': {
     id: 'contact',
     name: 'Contact.txt',
     type: 'file',
     icon: '📧',
-    position: { x: 20, y: 385 },
+    position: { x: 20, y: 535 },
     content: `CONTACT INFORMATION
 ═══════════════════
 
@@ -136,7 +196,7 @@ Feel free to reach out!`,
     name: 'README.txt',
     type: 'file',
     icon: '📝',
-    position: { x: 20, y: 460 },
+    position: { x: 20, y: 610 },
     content: `--- WELCOME TO RETRO-OS v1.0 ---
 
 Welcome to my interactive portfolio!
@@ -162,23 +222,6 @@ KEY FEATURES:
 ENJOY YOUR STAY!
 - Daniel`,
     appType: 'notepad',
-  },
-  'recycle-bin': {
-    id: 'recycle-bin',
-    name: 'Recycle Bin',
-    type: 'system',
-    icon: '🗑️',
-    position: { x: 20, y: 535 },
-    children: [],
-    appType: 'recyclebin',
-  },
-  'internet-explorer': {
-    id: 'internet-explorer',
-    name: 'Internet Explorer',
-    type: 'system',
-    icon: '🌐',
-    position: { x: 120, y: 20 },
-    appType: 'browser',
   },
   'project-1': {
     id: 'project-1',
@@ -425,103 +468,114 @@ export function FileSystemProvider({ children }) {
   // Check if a file can be copied/cut (not a system file)
   const canModifyFile = useCallback((id) => {
     const file = files[id];
-    return file && file.type !== 'system';
+    return file && file.type !== 'system' && file.type !== 'drive';
   }, [files]);
 
-  // Copy file to clipboard
-  const copyFile = useCallback((id) => {
-    if (!canModifyFile(id)) return false;
-    setClipboard({ type: 'copy', fileId: id });
+  // Copy file(s) to clipboard - accepts single ID or array of IDs
+  const copyFile = useCallback((ids) => {
+    const idArray = Array.isArray(ids) ? ids : [ids];
+    const validIds = idArray.filter(id => canModifyFile(id));
+    if (validIds.length === 0) return false;
+    setClipboard({ type: 'copy', fileIds: validIds });
     return true;
   }, [canModifyFile]);
 
-  // Cut file to clipboard
-  const cutFile = useCallback((id) => {
-    if (!canModifyFile(id)) return false;
-    setClipboard({ type: 'cut', fileId: id });
+  // Cut file(s) to clipboard - accepts single ID or array of IDs
+  const cutFile = useCallback((ids) => {
+    const idArray = Array.isArray(ids) ? ids : [ids];
+    const validIds = idArray.filter(id => canModifyFile(id));
+    if (validIds.length === 0) return false;
+    setClipboard({ type: 'cut', fileIds: validIds });
     return true;
   }, [canModifyFile]);
 
-  // Paste from clipboard
+  // Paste from clipboard - handles multiple files
   const pasteFile = useCallback((targetFolderId = 'desktop') => {
-    if (!clipboard) return null;
-    
-    const clipboardData = clipboard; // Capture clipboard value
-    const sourceFile = files[clipboardData.fileId];
-    if (!sourceFile) return null;
-    
+    if (!clipboard || !clipboard.fileIds || clipboard.fileIds.length === 0) return null;
+
+    const clipboardData = clipboard;
+    const pastedIds = [];
+
     if (clipboardData.type === 'copy') {
-      // Create a copy - destructure to exclude id and children (folders get fresh empty children)
-      const { id: _id, children: _children, ...fileToCopy } = sourceFile;
-      const newId = addFile({
-        ...fileToCopy,
-        name: `${sourceFile.name} - Copy`,
-        position: {
-          x: (sourceFile.position?.x || 20) + 20,
-          y: (sourceFile.position?.y || 20) + 20,
-        },
-        // If it's a folder, give it empty children array
-        ...(sourceFile.type === 'folder' ? { children: [] } : {})
-      }, targetFolderId);
-      // Don't clear clipboard after copy - user might want to paste multiple times
-      return newId;
+      // Create copies of all files
+      let offsetX = 0;
+      let offsetY = 0;
+
+      clipboardData.fileIds.forEach((fileId, index) => {
+        const sourceFile = files[fileId];
+        if (!sourceFile) return;
+
+        const { id: _id, children: _children, ...fileToCopy } = sourceFile;
+        const newId = addFile({
+          ...fileToCopy,
+          name: clipboardData.fileIds.length > 1 ? sourceFile.name : `${sourceFile.name} - Copy`,
+          position: {
+            x: (sourceFile.position?.x || 20) + 20 + offsetX,
+            y: (sourceFile.position?.y || 20) + 20 + offsetY,
+          },
+          ...(sourceFile.type === 'folder' ? { children: [] } : {})
+        }, targetFolderId);
+
+        pastedIds.push(newId);
+        offsetX += 20;
+        offsetY += 20;
+      });
+
+      // Don't clear clipboard after copy
+      return pastedIds;
     } else if (clipboardData.type === 'cut') {
-      // Move the file
-      const fileIdToMove = clipboardData.fileId;
-      
       // Clear clipboard first to prevent double-paste
       setClipboard(null);
-      
+
       setFiles(prev => {
-        // Find current parent by checking all folders' children arrays
-        let currentParentId = null;
-        for (const [key, file] of Object.entries(prev)) {
-          if (file.children && Array.isArray(file.children) && file.children.includes(fileIdToMove)) {
-            currentParentId = key;
-            break;
+        let newState = { ...prev };
+
+        clipboardData.fileIds.forEach(fileIdToMove => {
+          const file = newState[fileIdToMove];
+          if (!file) return;
+
+          // Find current parent
+          let currentParentId = null;
+          for (const [key, f] of Object.entries(newState)) {
+            if (f.children && Array.isArray(f.children) && f.children.includes(fileIdToMove)) {
+              currentParentId = key;
+              break;
+            }
           }
-        }
-        
-        if (!currentParentId) return prev;
-        
-        // Don't move to same folder
-        if (currentParentId === targetFolderId) return prev;
-        
-        const currentParent = prev[currentParentId];
-        const targetParent = prev[targetFolderId];
-        
-        if (!targetParent) return prev;
-        
-        // Check if file is already in target (prevent duplicates)
-        if (targetParent.children && targetParent.children.includes(fileIdToMove)) {
-          return prev;
-        }
-        
-        const movedFile = prev[fileIdToMove];
-        const updatedChildren = currentParent.children.filter(id => id !== fileIdToMove);
-        const newTargetChildren = [...(targetParent.children || []), fileIdToMove];
-        
-        return {
-          ...prev,
-          [currentParentId]: {
-            ...currentParent,
-            children: updatedChildren
-          },
-          [targetFolderId]: {
-            ...targetParent,
-            children: newTargetChildren
-          },
-          // Update position for desktop, remove for folders
-          [fileIdToMove]: {
-            ...movedFile,
-            position: targetFolderId === 'desktop' 
-              ? (movedFile.position || { x: 100, y: 100 })
-              : undefined
-          }
-        };
+
+          if (!currentParentId || currentParentId === targetFolderId) return;
+
+          const currentParent = newState[currentParentId];
+          const targetParent = newState[targetFolderId];
+
+          if (!targetParent) return;
+          if (targetParent.children && targetParent.children.includes(fileIdToMove)) return;
+
+          newState = {
+            ...newState,
+            [currentParentId]: {
+              ...currentParent,
+              children: currentParent.children.filter(id => id !== fileIdToMove)
+            },
+            [targetFolderId]: {
+              ...targetParent,
+              children: [...(targetParent.children || []), fileIdToMove]
+            },
+            [fileIdToMove]: {
+              ...file,
+              position: targetFolderId === 'desktop'
+                ? (file.position || { x: 100, y: 100 })
+                : undefined
+            }
+          };
+
+          pastedIds.push(fileIdToMove);
+        });
+
+        return newState;
       });
-      
-      return fileIdToMove;
+
+      return pastedIds;
     }
     return null;
   }, [clipboard, files, addFile]);
