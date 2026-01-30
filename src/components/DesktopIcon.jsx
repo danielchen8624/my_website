@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useOS } from '../context/OSContext';
 import { useFileSystem } from '../context/FileSystemContext';
+import { setSelectedFile } from './KeyboardShortcuts';
 
 export default function DesktopIcon({ file }) {
   const { openWindow } = useOS();
@@ -67,6 +68,7 @@ export default function DesktopIcon({ file }) {
       }
     } else {
       setIsSelected(true);
+      setSelectedFile(file.id, 'desktop');
     }
     
     lastClickTimeRef.current = now;

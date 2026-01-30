@@ -13,7 +13,7 @@ const DEFAULT_FILES = {
     name: 'Desktop',
     type: 'folder',
     icon: '🖥️',
-    children: ['about', 'projects', 'contact', 'skills', 'recycle-bin'],
+    children: ['about', 'projects', 'contact', 'skills', 'recycle-bin', 'skills-file'],
   },
   'about': {
     id: 'about',
@@ -121,6 +121,47 @@ Feel free to reach out!`,
     content: 'This website! A Windows 95 themed portfolio.',
     link: '#',
   },
+  'skills-file': {
+    id: 'skills-file',
+    name: 'My Skills.txt',
+    type: 'file',
+    icon: '📝',
+    position: { x: 20, y: 520 },
+    content: `╔══════════════════════════════════════════════════════════╗
+║              MY SKILLS & TECHNOLOGIES                    ║
+╚══════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💾 PROGRAMMING LANGUAGES
+────────────────────────────────────────────────────────────
+• Python          • Java            • C
+• C++             • JavaScript      • TypeScript
+• SQL             • HTML/CSS
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 TOOLS & FRAMEWORKS  
+────────────────────────────────────────────────────────────
+• React.js        • Next.js         • React Native
+• Expo            • Node.js         • Express
+• FastAPI         • PyTorch         • Flask
+• Tailwind        • NativeWind      • Vite
+• Git             • Vercel
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+☁️ CLOUD & DATABASES
+────────────────────────────────────────────────────────────
+• PostgreSQL      • MySQL           • Firebase
+• SQLite          • SQLAlchemy      • AWS
+• Google Cloud
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+                    Always learning more! 📚`,
+    appType: 'notepad',
+  },
 };
 
 // Load from localStorage or use defaults
@@ -173,6 +214,75 @@ export function FileSystemProvider({ children }) {
   const getFilesInFolder = useCallback((folderId) => {
     return getFolderContents(folderId);
   }, [getFolderContents]);
+
+  // Get all folders for sidebar tree
+  const getAllFolders = useCallback(() => {
+    return Object.values(files).filter(f => f.type === 'folder' || f.id === 'desktop');
+  }, [files]);
+
+  // Find parent folder of a file
+  const findParent = useCallback((fileId) => {
+    for (const [key, file] of Object.entries(files)) {
+      if (file.children && file.children.includes(fileId)) {
+        return file;
+      }
+    }
+    return null;
+  }, [files]);
+
+  // Get full path of a file (e.g., "C:\Desktop\Folder\File.txt")
+  const getFilePath = useCallback((fileId) => {
+    const parts = [];
+    let current = files[fileId];
+    
+    while (current) {
+      parts.unshift(current.name);
+      current = findParent(current.id);
+    }
+    
+    // Replace "Desktop" at root with "C:\Desktop"
+    if (parts[0] === 'Desktop') {
+      parts[0] = 'C:\\Desktop';
+    }
+    
+    return parts.join('\\');
+  }, [files, findParent]);
+
+  // Find file by path (for address bar navigation)
+  const findFileByPath = useCallback((path) => {
+    // Normalize path separators
+    const normalizedPath = path.replace(/\//g, '\\');
+    const parts = normalizedPath.split('\\').filter(Boolean);
+    
+    // Handle "C:\Desktop" or just "Desktop"
+    if (parts[0]?.toLowerCase() === 'c:') {
+      parts.shift();
+    }
+    
+    if (parts.length === 0 || (parts.length === 1 && parts[0].toLowerCase() === 'desktop')) {
+      return files['desktop'];
+    }
+    
+    // Skip "Desktop" if present
+    if (parts[0]?.toLowerCase() === 'desktop') {
+      parts.shift();
+    }
+    
+    // Navigate through path
+    let current = files['desktop'];
+    for (const part of parts) {
+      if (!current?.children) return null;
+      
+      const child = current.children
+        .map(id => files[id])
+        .find(f => f?.name?.toLowerCase() === part.toLowerCase());
+      
+      if (!child) return null;
+      current = child;
+    }
+    
+    return current;
+  }, [files]);
 
   // Rename a file
   const renameFile = useCallback((id, newName) => {
@@ -442,6 +552,10 @@ export function FileSystemProvider({ children }) {
     getDesktopFiles,
     getFolderContents,
     getFilesInFolder,
+    getAllFolders,
+    findParent,
+    getFilePath,
+    findFileByPath,
     renameFile,
     updateFileContent,
     moveFile,

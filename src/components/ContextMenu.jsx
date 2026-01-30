@@ -66,15 +66,21 @@ export default function ContextMenu() {
 
   // Hide menu on click anywhere
   useEffect(() => {
-    const handleClick = () => setIsVisible(false);
+    const handleClick = (e) => {
+      // If clicked inside the menu, let the internal handlers manage it
+      if (e.target.closest('.context-menu')) return;
+      setIsVisible(false);
+    };
+    
     const handleScroll = () => setIsVisible(false);
     
-    document.addEventListener('click', handleClick);
+    // Use capture phase to catch clicks even if stopPropagation is called (e.g., on icons)
+    document.addEventListener('click', handleClick, true);
     document.addEventListener('scroll', handleScroll);
     document.addEventListener('contextmenu', handleContextMenu);
     
     return () => {
-      document.removeEventListener('click', handleClick);
+      document.removeEventListener('click', handleClick, true);
       document.removeEventListener('scroll', handleScroll);
       document.removeEventListener('contextmenu', handleContextMenu);
     };

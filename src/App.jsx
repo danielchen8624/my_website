@@ -6,6 +6,7 @@ import Taskbar from './components/Taskbar';
 import StartMenu from './components/StartMenu';
 import DesktopIcon from './components/DesktopIcon';
 import ContextMenu from './components/ContextMenu';
+import KeyboardShortcuts from './components/KeyboardShortcuts';
 
 // App Components
 import NotepadApp from './apps/NotepadApp';
@@ -30,7 +31,7 @@ function AppRenderer({ appType, fileId, onClose }) {
     case 'explorer':
       return <ExplorerApp folderId={fileId} />;
     case 'mycomputer':
-      return <SkillsApp />;
+      return <ExplorerApp folderId="desktop" />;
     case 'browser':
       return <InternetExplorerApp />;
     case 'recyclebin':
@@ -158,6 +159,7 @@ function Desktop() {
 
       {/* Context Menu */}
       <ContextMenu />
+      <KeyboardShortcuts />
 
       {/* Taskbar */}
       <Taskbar />
