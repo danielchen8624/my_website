@@ -86,6 +86,21 @@ function Desktop() {
     window.__selectedFileIds = selectedFileIds;
   }, [selectedFileIds]);
 
+  // Listen for selection events from single-icon clicks (DesktopIcon)
+  useEffect(() => {
+    const handleExternalSelection = (e) => {
+      // Only process events from DesktopIcon (source !== 'app')
+      // Ignore events that we dispatched ourselves
+      if (e.detail?.source === 'app') return;
+
+      const newSelection = e.detail?.selectedIds || [];
+      setSelectedFileIds(newSelection);
+    };
+
+    window.addEventListener('desktopSelection', handleExternalSelection);
+    return () => window.removeEventListener('desktopSelection', handleExternalSelection);
+  }, []);
+
   // Check if two rectangles intersect
   const rectsIntersect = (rect1, rect2) => {
     return !(
@@ -193,7 +208,7 @@ function Desktop() {
 
         setSelectedFileIds(selectedIds);
         window.dispatchEvent(new CustomEvent('desktopSelection', {
-          detail: { selectedIds }
+          detail: { selectedIds, source: 'app' }
         }));
 
         // Mark that we just finished selecting (prevent click from clearing)
@@ -205,7 +220,7 @@ function Desktop() {
         // It was just a click, clear selection
         setSelectedFileIds([]);
         window.dispatchEvent(new CustomEvent('desktopSelection', {
-          detail: { selectedIds: [] }
+          detail: { selectedIds: [], source: 'app' }
         }));
       }
 
@@ -231,7 +246,7 @@ function Desktop() {
         !e.target.closest('.window')) {
       setSelectedFileIds([]);
       window.dispatchEvent(new CustomEvent('desktopSelection', {
-        detail: { selectedIds: [] }
+        detail: { selectedIds: [], source: 'app' }
       }));
     }
   };

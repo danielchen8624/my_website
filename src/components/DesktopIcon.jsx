@@ -87,6 +87,10 @@ export default function DesktopIcon({ file, isSelected: isSelectedProp = false }
         setNewName(file.name);
       }
     } else {
+      // Dispatch event to clear other icons' selections (exclusive select)
+      window.dispatchEvent(new CustomEvent('desktopSelection', {
+        detail: { selectedIds: [file.id] }
+      }));
       setIsSelectedLocal(true);
       setSelectedFile(file.id, 'desktop');
     }

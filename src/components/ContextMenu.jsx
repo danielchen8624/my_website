@@ -123,18 +123,22 @@ export default function ContextMenu() {
         break;
       case 'copy':
         // If multiple files are selected, copy all of them
-        if (selectedFileIds.length > 0 && selectedFileIds.includes(targetId)) {
-          copyFile(selectedFileIds);
+        // Use window.__selectedFileIds as source of truth for marquee selection
+        const copySelection = window.__selectedFileIds || selectedFileIds || [];
+        if (copySelection.length > 1 && copySelection.includes(targetId)) {
+          copyFile(copySelection);
         } else if (targetId) {
-          copyFile(targetId);
+          copyFile([targetId]);
         }
         break;
       case 'cut':
         // If multiple files are selected, cut all of them
-        if (selectedFileIds.length > 0 && selectedFileIds.includes(targetId)) {
-          cutFile(selectedFileIds);
+        // Use window.__selectedFileIds as source of truth for marquee selection
+        const cutSelection = window.__selectedFileIds || selectedFileIds || [];
+        if (cutSelection.length > 1 && cutSelection.includes(targetId)) {
+          cutFile(cutSelection);
         } else if (targetId) {
-          cutFile(targetId);
+          cutFile([targetId]);
         }
         break;
       case 'paste':

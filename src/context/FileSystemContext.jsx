@@ -95,19 +95,19 @@ const DEFAULT_FILES = {
 ║                    ABOUT ME                                ║
 ╚══════════════════════════════════════════════════════════╝
 
-Hello, World! 👋
+Hello, World! <WAVE>
 
-I'm Daniel Chen, a passionate developer who loves building 
+I'm Daniel Chen, a passionate developer who loves building
 creative and interactive web experiences.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🎯 WHAT I DO
+[*] WHAT I DO
 ────────────────────────────────────────────────────────────
-• Full-Stack Web Development
-• Creative UI/UX Design
-• Interactive Experiences
-• Problem Solving
+* Full-Stack Web Development
+* Creative UI/UX Design
+* Interactive Experiences
+* Problem Solving
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -137,33 +137,33 @@ Thanks for visiting! Feel free to explore.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-💾 PROGRAMMING LANGUAGES
+[FLOPPY] PROGRAMMING LANGUAGES
 ────────────────────────────────────────────────────────────
-• Python          • Java            • C
-• C++             • JavaScript      • TypeScript
-• SQL             • HTML/CSS
+* Python          * Java            * C
+* C++             * JavaScript      * TypeScript
+* SQL             * HTML/CSS
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🔧 TOOLS & FRAMEWORKS  
+[TOOLS] TOOLS & FRAMEWORKS
 ────────────────────────────────────────────────────────────
-• React.js        • Next.js         • React Native
-• Expo            • Node.js         • Express
-• FastAPI         • PyTorch         • Flask
-• Tailwind        • NativeWind      • Vite
-• Git             • Vercel
+* React.js        * Next.js         * React Native
+* Expo            * Node.js         * Express
+* FastAPI         * PyTorch         * Flask
+* Tailwind        * NativeWind      * Vite
+* Git             * Vercel
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-☁️ CLOUD & DATABASES
+[CLOUD] CLOUD & DATABASES
 ────────────────────────────────────────────────────────────
-• PostgreSQL      • MySQL           • Firebase
-• SQLite          • SQLAlchemy      • AWS
-• Google Cloud
+* PostgreSQL      * MySQL           * Firebase
+* SQLite          * SQLAlchemy      * AWS
+* Google Cloud
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-                    Always learning more! 📚`,
+                    Always learning more! [BOOKS]`,
     appType: 'notepad',
   },
   'resume': {
@@ -183,10 +183,10 @@ Thanks for visiting! Feel free to explore.
     content: `CONTACT INFORMATION
 ═══════════════════
 
-📧 Email: hello@danielchen.dev
-🐙 GitHub: github.com/danielchen
-💼 LinkedIn: linkedin.com/in/danielchen
-🐦 Twitter: @danielchen
+[EMAIL]    Email: hello@danielchen.dev
+[GITHUB]   GitHub: github.com/danielchen
+[WORK]     LinkedIn: linkedin.com/in/danielchen
+[BIRD]     Twitter: @danielchen
 
 Feel free to reach out!`,
     appType: 'contact',
@@ -400,7 +400,7 @@ export function FileSystemProvider({ children }) {
 
   // Add a new file
   const addFile = useCallback((file, parentId = 'desktop') => {
-    const newId = `file-${Date.now()}`;
+    const newId = `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     // Destructure to exclude any existing id from the source file
     const { id: _ignoreId, ...fileWithoutId } = file;
     const newFile = {
