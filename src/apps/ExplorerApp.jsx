@@ -194,8 +194,9 @@ export default function ExplorerApp({ folderId = 'desktop' }) {
 
   const handleDrop = useCallback((e) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsDropTarget(false);
-    
+
     const draggedFileId = window.__draggingFileId;
     if (draggedFileId && draggedFileId !== currentFolderId) {
       // Move the file into this folder

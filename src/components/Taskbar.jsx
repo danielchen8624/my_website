@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useOS } from '../context/OSContext';
 
 export default function Taskbar() {
-  const { windows, toggleStartMenu, startMenuOpen, focusWindow, minimizeWindow } = useOS();
+  const { windows, toggleStartMenu, startMenuOpen, focusWindow, minimizeWindow, openWindow } = useOS();
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // Update clock every minute
@@ -42,6 +42,37 @@ export default function Taskbar() {
       </button>
 
       {/* Divider */}
+      <div className="taskbar-divider" />
+
+      {/* Quick Launch */}
+      <div className="quick-launch">
+         <button 
+           className="quick-launch-btn" 
+           title="Show Desktop"
+           onClick={() => {
+             // Logic to minimize all? Or just focus desktop?
+             // For now just a placeholder action or we can implement minimize all in OSContext
+             alert("Show Desktop: TODO");
+           }}
+         >
+           🖥️
+         </button>
+         <button 
+           className="quick-launch-btn" 
+           title="Internet Explorer"
+           onClick={() => openWindow('browser', { id: 'browser', name: 'Internet Explorer', icon: '🌐', appType: 'browser' })}
+         >
+           🌐
+         </button>
+         <button 
+           className="quick-launch-btn" 
+           title="Winamp"
+           onClick={() => openWindow('winamp', { id: 'winamp', name: 'Winamp', icon: '🎵', appType: 'winamp' })}
+         >
+           🎵
+         </button>
+      </div>
+      
       <div className="taskbar-divider" />
 
       {/* Open Windows */}

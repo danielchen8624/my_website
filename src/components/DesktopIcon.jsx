@@ -272,7 +272,9 @@ export default function DesktopIcon({ file }) {
       onMouseDown={handleMouseDown}
     >
       <div className="desktop-icon-image">
-        {file.icon}
+        {file.id === 'recycle-bin' 
+          ? (file.children && file.children.length > 0 ? '🚮' : '🗑️')
+          : file.icon}
       </div>
       
       {isRenaming ? (

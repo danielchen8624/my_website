@@ -9,6 +9,9 @@ const DEFAULT_WINDOW_SIZES = {
   explorer: { width: 600, height: 450 },
   browser: { width: 800, height: 600 },
   mycomputer: { width: 550, height: 400 },
+  minesweeper: { width: 174, height: 210 }, // Fixed size for beginner board roughly
+  'system-properties': { width: 400, height: 480 },
+  run: { width: 350, height: 160 },
   resume: { width: 700, height: 750 },
   default: { width: 500, height: 400 },
 };

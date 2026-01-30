@@ -4,7 +4,9 @@ import { createContext, useContext, useState, useCallback, useEffect } from 'rea
 const FileSystemContext = createContext(null);
 
 // Storage key for localStorage
-const STORAGE_KEY = 'retro-os-filesystem';
+// Storage key for localStorage
+// Storage key for localStorage
+const STORAGE_KEY = 'retro-os-filesystem-v3';
 
 // Default file system structure
 const DEFAULT_FILES = {
@@ -13,14 +15,14 @@ const DEFAULT_FILES = {
     name: 'Desktop',
     type: 'folder',
     icon: '🖥️',
-    children: ['about', 'projects', 'contact', 'skills', 'recycle-bin', 'skills-file', 'resume'],
+    children: ['about', 'projects', 'skills-file', 'resume', 'skills', 'contact', 'readme', 'recycle-bin'],
   },
   'about': {
     id: 'about',
     name: 'About Me.txt',
     type: 'file',
     icon: '📝',
-    position: { x: 20, y: 20 },
+    position: { x: 20, y: 10 },
     content: `╔══════════════════════════════════════════════════════════╗
 ║                    ABOUT ME                                ║
 ╚══════════════════════════════════════════════════════════╝
@@ -51,82 +53,16 @@ Thanks for visiting! Feel free to explore.
     name: 'My Projects',
     type: 'folder',
     icon: '📁',
-    position: { x: 20, y: 120 },
+    position: { x: 20, y: 85 },
     children: ['project-1', 'project-2', 'project-3'],
     appType: 'explorer',
-  },
-  'contact': {
-    id: 'contact',
-    name: 'Contact.txt',
-    type: 'file',
-    icon: '📧',
-    position: { x: 20, y: 220 },
-    content: `CONTACT INFORMATION
-═══════════════════
-
-📧 Email: hello@danielchen.dev
-🐙 GitHub: github.com/danielchen
-💼 LinkedIn: linkedin.com/in/danielchen
-🐦 Twitter: @danielchen
-
-Feel free to reach out!`,
-    appType: 'contact',
-  },
-  'skills': {
-    id: 'skills',
-    name: 'My Computer',
-    type: 'system',
-    icon: '💻',
-    position: { x: 20, y: 320 },
-    appType: 'mycomputer',
-  },
-  'recycle-bin': {
-    id: 'recycle-bin',
-    name: 'Recycle Bin',
-    type: 'system',
-    icon: '🗑️',
-    position: { x: 20, y: 420 },
-    children: [],
-    appType: 'recyclebin',
-  },
-  'internet-explorer': {
-    id: 'internet-explorer',
-    name: 'Internet Explorer',
-    type: 'system',
-    icon: '🌐',
-    position: { x: 20, y: 520 },
-    appType: 'browser',
-  },
-  'project-1': {
-    id: 'project-1',
-    name: 'Project Alpha',
-    type: 'file',
-    icon: '📄',
-    content: 'A full-stack web application built with React and Node.js',
-    link: 'https://github.com',
-  },
-  'project-2': {
-    id: 'project-2',
-    name: 'Project Beta',
-    type: 'file',
-    icon: '📄',
-    content: 'An interactive data visualization dashboard',
-    link: 'https://github.com',
-  },
-  'project-3': {
-    id: 'project-3',
-    name: 'Retro OS Website',
-    type: 'file',
-    icon: '💻',
-    content: 'This website! A Windows 95 themed portfolio.',
-    link: '#',
   },
   'skills-file': {
     id: 'skills-file',
     name: 'My Skills.txt',
     type: 'file',
     icon: '📝',
-    position: { x: 20, y: 520 },
+    position: { x: 20, y: 160 },
     content: `╔══════════════════════════════════════════════════════════╗
 ║              MY SKILLS & TECHNOLOGIES                    ║
 ╚══════════════════════════════════════════════════════════╝
@@ -167,8 +103,106 @@ Feel free to reach out!`,
     name: 'Resume.doc',
     type: 'file',
     icon: '📄',
-    position: { x: 20, y: 620 },
+    position: { x: 20, y: 235 },
     appType: 'resume',
+  },
+  'skills': {
+    id: 'skills',
+    name: 'My Computer',
+    type: 'system',
+    icon: '💻',
+    position: { x: 20, y: 310 },
+    appType: 'mycomputer',
+  },
+  'contact': {
+    id: 'contact',
+    name: 'Contact.txt',
+    type: 'file',
+    icon: '📧',
+    position: { x: 20, y: 385 },
+    content: `CONTACT INFORMATION
+═══════════════════
+
+📧 Email: hello@danielchen.dev
+🐙 GitHub: github.com/danielchen
+💼 LinkedIn: linkedin.com/in/danielchen
+🐦 Twitter: @danielchen
+
+Feel free to reach out!`,
+    appType: 'contact',
+  },
+  'readme': {
+    id: 'readme',
+    name: 'README.txt',
+    type: 'file',
+    icon: '📝',
+    position: { x: 20, y: 460 },
+    content: `--- WELCOME TO RETRO-OS v1.0 ---
+
+Welcome to my interactive portfolio!
+This website is a fully simulated Operating System running in your browser.
+
+KEY FEATURES:
+-------------
+1. Start Menu & Taskbar
+   - Use the Start Menu to navigate apps.
+   - Quick Launch icons (next to Start) for instant access.
+
+2. Interactive Apps
+   - Winamp: Plays real tunes!
+   - Minesweeper: Fully playable clone (try typing 'minesweeper' in Run).
+   - Paint: Draw masterpieces.
+   - Terminal: Supports real commands like 'ls', 'cd', 'mkdir'.
+
+3. Hidden Secrets
+   - Try right-clicking "My Computer" -> Properties.
+   - Delete files and check the Recycle Bin (it really works!).
+   - Look out for the Blue Screen of Death...
+
+ENJOY YOUR STAY!
+- Daniel`,
+    appType: 'notepad',
+  },
+  'recycle-bin': {
+    id: 'recycle-bin',
+    name: 'Recycle Bin',
+    type: 'system',
+    icon: '🗑️',
+    position: { x: 20, y: 535 },
+    children: [],
+    appType: 'recyclebin',
+  },
+  'internet-explorer': {
+    id: 'internet-explorer',
+    name: 'Internet Explorer',
+    type: 'system',
+    icon: '🌐',
+    position: { x: 120, y: 20 },
+    appType: 'browser',
+  },
+  'project-1': {
+    id: 'project-1',
+    name: 'Project Alpha',
+    type: 'file',
+    icon: '📄',
+    content: 'A full-stack web application built with React and Node.js',
+    link: 'https://github.com',
+  },
+  'project-2': {
+    id: 'project-2',
+    name: 'Project Beta',
+    type: 'file',
+    icon: '📄',
+    content: 'An interactive data visualization dashboard',
+    link: 'https://github.com',
+  },
+  'project-3': {
+    id: 'project-3',
+    name: 'Retro OS Website',
+    type: 'file',
+    icon: '💻',
+    content: 'This website! A Windows 95 themed portfolio.',
+    link: '#',
   },
 };
 
@@ -353,7 +387,7 @@ export function FileSystemProvider({ children }) {
       // Don't delete system files
       if (!fileToDelete || fileToDelete.type === 'system') return prev;
       
-      // Find parent if not provided
+      // Find parent if not provided (for originalParentId)
       let actualParentId = parentId;
       if (!actualParentId) {
         for (const [key, file] of Object.entries(prev)) {
@@ -378,11 +412,16 @@ export function FileSystemProvider({ children }) {
         'recycle-bin': {
           ...recycleBin,
           children: [...(recycleBin.children || []), id]
+        },
+        [id]: {
+            ...fileToDelete,
+            originalParentId: actualParentId,
+            originalPosition: fileToDelete.position || { x: 20, y: 20 }
         }
       };
     });
   }, []);
-
+  
   // Check if a file can be copied/cut (not a system file)
   const canModifyFile = useCallback((id) => {
     const file = files[id];
@@ -575,8 +614,34 @@ export function FileSystemProvider({ children }) {
 
   // Restore file from recycle bin
   const restoreFile = useCallback((fileId) => {
-    moveFileToFolder(fileId, 'desktop');
-  }, [moveFileToFolder]);
+    setFiles(prev => {
+        const file = prev[fileId];
+        const recycleBin = prev['recycle-bin'];
+        const targetParentId = file.originalParentId || 'desktop';
+        const targetParent = prev[targetParentId] || prev['desktop']; // Fallback to desktop
+        const targetId = targetParent.id;
+
+        if (!recycleBin.children.includes(fileId)) return prev;
+
+        return {
+            ...prev,
+            'recycle-bin': {
+                ...recycleBin,
+                children: recycleBin.children.filter(id => id !== fileId)
+            },
+            [targetId]: {
+                ...targetParent,
+                children: [...(targetParent.children || []), fileId]
+            },
+            [fileId]: {
+                ...file,
+                position: file.originalPosition || { x: 20, y: 20 }, // Restore position logic
+                originalParentId: undefined,
+                originalPosition: undefined
+            }
+        };
+    });
+  }, []);
 
   // Permanently delete file from recycle bin
   const permanentlyDelete = useCallback((fileId) => {

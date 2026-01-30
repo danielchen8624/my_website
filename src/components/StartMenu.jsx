@@ -63,6 +63,15 @@ export default function StartMenu() {
       case 'newfile':
         createTextFile();
         break;
+      case 'run':
+        openWindow('run', {
+            id: 'run-dialog',
+            name: 'Run',
+            icon: '🏃',
+            appType: 'run',
+            isDialog: true,
+        });
+        break;
       case 'reset':
         handleReset();
         return; // Don't close start menu immediately (reload will happen)
@@ -87,13 +96,16 @@ export default function StartMenu() {
     { id: 'newfolder', label: 'New Folder', icon: '📁', action: 'newfolder' },
     { id: 'newfile', label: 'New Text File', icon: '📝', action: 'newfile' },
     { type: 'divider' },
+    { type: 'divider' },
     { id: 'reset', label: 'Reset System...', icon: '⚠️', action: 'reset' },
-    { id: 'shutdown', label: 'Shut Down...', icon: '🔌', action: null },
+    { id: 'run', label: 'Run...', icon: '🏃', action: 'run' },
+    { type: 'divider' },
+    { id: 'shutdown', label: 'Shut Down...', icon: '🔌', action: 'shutdown' },
   ];
 
   const handleReset = () => {
     if (confirm('⚠️ WARNING: This will reset all files, settings, and changes to default.\n\nAre you sure you want to continue?')) {
-      localStorage.removeItem('retro-os-filesystem');
+      localStorage.removeItem('retro-os-filesystem-v3');
       localStorage.removeItem('retroos-wallpaper');
       window.location.reload();
     }

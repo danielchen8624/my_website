@@ -130,14 +130,26 @@ export default function ContextMenu() {
         }
         break;
       case 'properties':
-        // Open system properties
-        const propsFile = {
-          id: 'properties',
-          name: 'Properties',
-          icon: '⚙️',
-          appType: 'properties',
-        };
-        openWindow('properties', propsFile);
+        if (targetId === 'mycomputer') {
+          openWindow('system-properties', {
+             id: 'system-properties',
+             name: 'System Properties',
+             icon: '💻',
+             appType: 'system-properties',
+             width: 400,
+             height: 480,
+          });
+        } else if (targetType === 'desktop' || targetType === 'folder-background') {
+             openWindow('display', {
+              id: 'display',
+              name: 'Display Properties',
+              icon: '🖥️',
+              appType: 'properties',
+            });
+        } else {
+             // Default file properties (placeholder)
+             alert('Properties not available for this item.');
+        }
         break;
       default:
         break;

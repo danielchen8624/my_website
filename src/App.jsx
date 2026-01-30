@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { OSProvider, useOS } from './context/OSContext';
 import { FileSystemProvider, useFileSystem } from './context/FileSystemContext';
 import Window from './components/Window';
@@ -7,6 +7,10 @@ import StartMenu from './components/StartMenu';
 import DesktopIcon from './components/DesktopIcon';
 import ContextMenu from './components/ContextMenu';
 import KeyboardShortcuts from './components/KeyboardShortcuts';
+import BiosBoot from './components/BiosBoot';
+import SplashScreen from './components/SplashScreen';
+import BSOD from './components/BSOD';
+import RunDialog from './components/RunDialog';
 
 // App Components
 import NotepadApp from './apps/NotepadApp';
@@ -21,6 +25,8 @@ import TerminalApp from './apps/TerminalApp';
 import DisplayPropertiesApp from './apps/DisplayPropertiesApp';
 import RecycleBinApp from './apps/RecycleBinApp';
 import ResumeApp from './apps/ResumeApp';
+import MinesweeperApp from './apps/MinesweeperApp';
+import SystemPropertiesApp from './apps/SystemPropertiesApp';
 
 // Render the appropriate app based on type
 function AppRenderer({ appType, fileId, onClose }) {
@@ -49,6 +55,12 @@ function AppRenderer({ appType, fileId, onClose }) {
       return <DisplayPropertiesApp onClose={onClose} />;
     case 'resume':
       return <ResumeApp />;
+    case 'minesweeper':
+      return <MinesweeperApp />;
+    case 'system-properties':
+      return <SystemPropertiesApp />;
+    case 'run':
+        return <RunDialog onClose={onClose} />;
     default:
       return <div style={{ padding: 16 }}>Unknown app type: {appType}</div>;
   }
@@ -174,10 +186,40 @@ function Desktop() {
 }
 
 function App() {
+  const [systemState, setSystemState] = useState('bios'); // 'bios', 'splash', 'desktop', 'bsod'
+
+  useEffect(() => {
+    // Listen for BSOD trigger
+    const handleBSOD = () => setSystemState('bsod');
+    window.addEventListener('trigger-bsod', handleBSOD);
+    return () => window.removeEventListener('trigger-bsod', handleBSOD);
+  }, []);
+
+  // Handle reboot from BSOD
+  const handleReboot = () => {
+    setSystemState('bios');
+  };
+
   return (
     <FileSystemProvider>
       <OSProvider>
-        <Desktop />
+        {systemState === 'bios' && (
+            <BiosBoot onComplete={() => setSystemState('splash')} />
+        )}
+        
+        {systemState === 'splash' && (
+            <SplashScreen onComplete={() => setSystemState('desktop')} />
+        )}
+
+        {systemState === 'bsod' && (
+            <BSOD onDismiss={handleReboot} />
+        )}
+
+        {/* Always render desktop structure but hide it when booting/crashed to keep state? 
+            Actually, real OS would re-mount. Let's conditionally render. */}
+        {systemState === 'desktop' && (
+            <Desktop />
+        )}
       </OSProvider>
     </FileSystemProvider>
   );
