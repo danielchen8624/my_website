@@ -2,9 +2,10 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useOS } from '../context/OSContext';
 import { useFileSystem } from '../context/FileSystemContext';
 import { setSelectedFile } from '../components/KeyboardShortcuts';
+import Icon from '../components/Icon';
 
-export default function ExplorerApp({ folderId = 'desktop' }) {
-  const { openWindow } = useOS();
+export default function ExplorerApp({ folderId = 'desktop', windowId }) {
+  const { openWindow, updateWindowTitle } = useOS();
   const {
     getFilesInFolder,
     getFile,
@@ -31,6 +32,13 @@ export default function ExplorerApp({ folderId = 'desktop' }) {
   
   const folder = getFile(currentFolderId);
   const files = getFilesInFolder(currentFolderId);
+
+  // Sync window title with current folder
+  useEffect(() => {
+    if (windowId && folder) {
+      updateWindowTitle(windowId, folder.name);
+    }
+  }, [windowId, folder, updateWindowTitle]);
   
   // Update address bar when folder changes
   useEffect(() => {
@@ -121,18 +129,15 @@ export default function ExplorerApp({ folderId = 'desktop' }) {
     if (file.type === 'folder') {
       navigateTo(file.id);
     } else if (file.type === 'drive') {
-      // Drive C: navigates to desktop (root file system)
+      // Drive C: navigates to desktop (root file system) - logic per requirements
       if (file.id === 'drive-c') {
         navigateTo('desktop');
       } else if (file.id === 'drive-d') {
-        // CD Drive - show empty or message
         alert('Please insert a disc');
       }
     } else if (file.type === 'system-folder') {
-      // System folders like Control Panel navigate into them
       navigateTo(file.id);
     } else if (file.type === 'system' && file.children) {
-      // System items with children (like My Computer) navigate into them
       navigateTo(file.id);
     } else {
       openWindow(file.id, file);
@@ -149,7 +154,7 @@ export default function ExplorerApp({ folderId = 'desktop' }) {
     
     if (selectedId === file.id && sameFile && timeSinceLastClick > 500 && timeSinceLastClick < 1500) {
       // Slow double-click - start renaming (but not for system files)
-      if (file.type !== 'system') {
+      if (file.type !== 'system' && file.type !== 'drive') {
         setIsRenaming(true);
         setRenameValue(file.name);
       }
@@ -160,7 +165,7 @@ export default function ExplorerApp({ folderId = 'desktop' }) {
     
     lastClickTimeRef.current = now;
     lastClickIdRef.current = file.id;
-  }, [selectedId]);
+  }, [selectedId, currentFolderId]);
 
   // Handle rename submit
   const handleRenameSubmit = useCallback(() => {
@@ -297,11 +302,17 @@ export default function ExplorerApp({ folderId = 'desktop' }) {
     const isExpanded = expandedFolders.includes(parentId);
     const isCurrentFolder = parentId === currentFolderId;
 
+    // Resolve icon
+    let iconKey = folder.icon;
+    if (parentId === 'recycle-bin') {
+      iconKey = (folder.children && folder.children.length > 0) ? 'recycle-bin-full' : 'recycle-bin-empty';
+    }
+
     return (
       <div key={parentId}>
         <div
           className={`sidebar-folder ${isCurrentFolder ? 'active' : ''}`}
-          style={{ paddingLeft: `${depth * 12 + 4}px` }}
+          style={{ paddingLeft: `${depth * 18 + 4}px` }}
           onClick={() => navigateTo(parentId)}
         >
           {childFolders.length > 0 && (
@@ -309,14 +320,18 @@ export default function ExplorerApp({ folderId = 'desktop' }) {
               className="folder-toggle"
               onClick={(e) => { e.stopPropagation(); toggleFolderExpansion(parentId); }}
             >
-              {isExpanded ? '▼' : '▶'}
+              {isExpanded ? '-' : '+'}
             </span>
           )}
           {childFolders.length === 0 && <span className="folder-toggle-spacer" />}
-          <span className="folder-icon">{folder.icon || '📁'}</span>
+          <span className="folder-icon"><Icon icon={iconKey} size={16} /></span>
           <span className="folder-name">{folder.name}</span>
         </div>
-        {isExpanded && childFolders.map(child => renderFolderTree(child.id, depth + 1))}
+        
+        {/* Render children only if expanded */}
+        {isExpanded && childFolders.map(child => (
+             renderFolderTree(child.id, depth + 1)
+        ))}
       </div>
     );
   }, [getFile, expandedFolders, currentFolderId, navigateTo, toggleFolderExpansion]);
@@ -331,7 +346,7 @@ export default function ExplorerApp({ folderId = 'desktop' }) {
           disabled={historyIndex === 0}
           title="Back"
         >
-          ◀
+          <Icon icon="directory_open" size={16} style={{transform: 'scaleX(-1)'}} /> Back
         </button>
         <button 
           className="explorer-toolbar-btn" 
@@ -339,103 +354,119 @@ export default function ExplorerApp({ folderId = 'desktop' }) {
           disabled={historyIndex >= history.length - 1}
           title="Forward"
         >
-          ▶
+           Next <Icon icon="directory_open" size={16} />
         </button>
+        <div className="vertical-separator" />
         <button 
           className="explorer-toolbar-btn" 
           onClick={goUp}
           disabled={currentFolderId === 'desktop'}
-          title="Up"
+          title="Up One Level"
         >
-          ⬆
+          <Icon icon="directory_open" size={16} />
         </button>
       </div>
 
       {/* Address Bar */}
       <div className="explorer-address-bar">
         <span>Address:</span>
-        <input 
-          className="explorer-address-input" 
-          value={addressValue} 
-          onChange={(e) => setAddressValue(e.target.value)}
-          onFocus={() => setIsEditingAddress(true)}
-          onBlur={handleAddressSubmit}
-          onKeyDown={handleAddressKeyDown}
-        />
-        <button 
-          className="explorer-toolbar-btn"
-          onClick={handleAddressSubmit}
-          title="Go"
-        >
-          ➜
-        </button>
+        <div style={{ flex: 1, display: 'flex', border: '1px solid #7f9db9', background: 'white' }}>
+            <div style={{ padding: '2px' }}><Icon icon="folder" size={16} /></div>
+            <input 
+              className="explorer-address-input" 
+              value={addressValue} 
+              onChange={(e) => setAddressValue(e.target.value)}
+              onFocus={() => setIsEditingAddress(true)}
+              onBlur={handleAddressSubmit}
+              onKeyDown={handleAddressKeyDown}
+              style={{ border: 'none', width: '100%' }}
+            />
+        </div>
       </div>
 
       {/* Main content area with sidebar */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', borderTop: '1px solid #808080' }}>
         {/* Sidebar Tree */}
         <div className="explorer-sidebar">
-          <div className="sidebar-header">All Folders</div>
+          <div className="sidebar-header">Folders</div>
           <div className="sidebar-content">
+             {/* STRICT ROOT: Desktop */}
             {renderFolderTree('desktop')}
           </div>
         </div>
 
         {/* File Grid */}
         <div 
-          className={`explorer-grid ${isDropTarget ? 'drop-target' : ''}`} 
-          style={{ flex: 1 }}
-          data-folder-id={currentFolderId}
-          onClick={handleBackgroundClick}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
+          className={`explorer-content-area`} 
+          style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
         >
-          {files.length === 0 ? (
-            <div style={{ padding: '16px', color: '#808080', fontStyle: 'italic' }}>
-              This folder is empty
+            {/* Header row hidden for icon view 
+            <div className="explorer-header-row">
+                <div style={{width: '200px'}}>Name</div>
+                <div style={{width: '100px'}}>Size</div>
+                <div style={{flex: 1}}>Type</div>
             </div>
-          ) : (
-            files.map((file) => (
-              <div
-                key={file.id}
-                className={`explorer-item ${selectedId === file.id ? 'selected' : ''}`}
-                onClick={(e) => handleClick(file, e)}
-                onDoubleClick={() => handleDoubleClick(file)}
-                draggable
-                onDragStart={() => handleItemDragStart(file)}
-                onDragEnd={handleItemDragEnd}
-                data-file-id={file.id}
-              >
-                <div className="explorer-item-icon">{file.icon}</div>
-                {isRenaming && selectedId === file.id ? (
-                  <input
-                    type="text"
-                    className="explorer-rename-input"
-                    value={renameValue}
-                    onChange={(e) => setRenameValue(e.target.value)}
-                    onKeyDown={handleRenameKeyDown}
-                    onBlur={handleRenameSubmit}
-                    onClick={(e) => e.stopPropagation()}
-                    autoFocus
-                  />
-                ) : (
-                  <div className="explorer-item-label">{file.name}</div>
-                )}
-              </div>
-            ))
-          )}
+            */}
+            
+            <div 
+              className={`explorer-grid ${isDropTarget ? 'drop-target' : ''}`}
+              style={{ flex: 1, overflowY: 'auto' }}
+              data-folder-id={currentFolderId}
+              onClick={handleBackgroundClick}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              {files.length === 0 ? (
+                <div style={{ padding: '16px', color: '#808080', fontStyle: 'italic' }}>
+                  This folder is empty
+                </div>
+              ) : (
+                files.map((file) => {
+                    let iconKey = file.icon;
+                    if (file.id === 'recycle-bin') {
+                        iconKey = (file.children && file.children.length > 0) ? 'recycle-bin-full' : 'recycle-bin-empty';
+                    }
+                    return (
+                  <div
+                    key={file.id}
+                    className={`explorer-item ${selectedId === file.id ? 'selected' : ''}`}
+                    onClick={(e) => handleClick(file, e)}
+                    onDoubleClick={() => handleDoubleClick(file)}
+                    draggable
+                    onDragStart={() => handleItemDragStart(file)}
+                    onDragEnd={handleItemDragEnd}
+                    data-file-id={file.id}
+                  >
+                    <div className="explorer-item-icon">
+                        <Icon icon={iconKey} size={32} />
+                    </div>
+                    {isRenaming && selectedId === file.id ? (
+                      <input
+                        type="text"
+                        className="explorer-rename-input"
+                        value={renameValue}
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        onKeyDown={handleRenameKeyDown}
+                        onBlur={handleRenameSubmit}
+                        onClick={(e) => e.stopPropagation()}
+                        autoFocus
+                      />
+                    ) : (
+                      <div className="explorer-item-label">{file.name}</div>
+                    )}
+                  </div>
+                )})
+              )}
+            </div>
         </div>
       </div>
 
       {/* Status Bar */}
-      <div style={{ 
-        padding: '4px 8px', 
-        borderTop: '2px solid #808080',
-        backgroundColor: '#c0c0c0',
-        fontSize: '11px'
-      }}>
-        {files.length} object(s)
+      <div className="explorer-status-bar">
+        <div style={{ width: '200px' }}>{files.length} object(s)</div>
+        <div style={{ flex: 1 }}></div>
+        <div style={{ width: '150px' }}>My Computer</div>
       </div>
     </div>
   );

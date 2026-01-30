@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useOS } from '../context/OSContext';
 import { useFileSystem } from '../context/FileSystemContext';
+import Icon from './Icon';
 
 export default function ContextMenu() {
   const { openWindow, windows, minimizeWindow } = useOS();
@@ -141,7 +142,6 @@ export default function ContextMenu() {
         break;
       case 'rename':
         // Dispatch custom event to trigger rename mode after a small delay
-        // This ensures React has processed any state changes before the rename starts
         if (targetId) {
           const fileIdToRename = targetId;
           setTimeout(() => {
@@ -154,7 +154,7 @@ export default function ContextMenu() {
           openWindow('system-properties', {
              id: 'system-properties',
              name: 'System Properties',
-             icon: '💻',
+             icon: 'my-computer',
              appType: 'system-properties',
              width: 400,
              height: 480,
@@ -163,7 +163,7 @@ export default function ContextMenu() {
              openWindow('display', {
               id: 'display',
               name: 'Display Properties',
-              icon: '🖥️',
+              icon: 'settings',
               appType: 'properties',
             });
         } else {
@@ -198,12 +198,12 @@ export default function ContextMenu() {
       return (
         <>
           <div className="context-menu-item" onClick={() => handleAction('minimizeAll')}>
-            <span className="context-menu-icon">🗕</span>
+            <span className="context-menu-icon"><Icon icon="🗕" size={16} /></span>
             <span>Minimize All Windows</span>
           </div>
           <div className="context-menu-divider" />
           <div className="context-menu-item" onClick={() => handleAction('properties')}>
-            <span className="context-menu-icon">⚙️</span>
+            <span className="context-menu-icon"><Icon icon="settings" size={16} /></span>
             <span>Properties</span>
           </div>
         </>
@@ -215,27 +215,27 @@ export default function ContextMenu() {
       return (
         <>
           <div className="context-menu-item" onClick={() => handleAction('newFolder')}>
-            <span className="context-menu-icon">📁</span>
+            <span className="context-menu-icon"><Icon icon="folder" size={16} /></span>
             <span>New Folder</span>
           </div>
           <div className="context-menu-item" onClick={() => handleAction('newTextFile')}>
-            <span className="context-menu-icon">📝</span>
+            <span className="context-menu-icon"><Icon icon="notepad" size={16} /></span>
             <span>New Text Document</span>
           </div>
           <div className="context-menu-divider" />
           {clipboard && (
             <div className="context-menu-item" onClick={() => handleAction('paste')}>
-              <span className="context-menu-icon">📋</span>
+              <span className="context-menu-icon"><Icon icon="📋" size={16} /></span>
               <span>Paste</span>
             </div>
           )}
           <div className="context-menu-item" onClick={() => handleAction('refresh')}>
-            <span className="context-menu-icon">🔄</span>
+            <span className="context-menu-icon"><Icon icon="directory_open" size={16} /></span>
             <span>Refresh</span>
           </div>
           <div className="context-menu-divider" />
           <div className="context-menu-item" onClick={() => handleAction('properties')}>
-            <span className="context-menu-icon">⚙️</span>
+            <span className="context-menu-icon"><Icon icon="settings" size={16} /></span>
             <span>Properties</span>
           </div>
         </>
@@ -245,38 +245,39 @@ export default function ContextMenu() {
     // File or Folder menu
     const targetFile = targetId ? getFile(targetId) : null;
     const isSystemFile = targetFile?.type === 'system';
+    const isDrive = targetFile?.type === 'drive';
     
     return (
       <>
         <div className="context-menu-item" onClick={() => handleAction('open')}>
-          <span className="context-menu-icon">📂</span>
+          <span className="context-menu-icon"><Icon icon="folder" size={16} /></span>
           <span>Open</span>
         </div>
-        {!isSystemFile && (
+        {!isSystemFile && !isDrive && (
           <>
             <div className="context-menu-divider" />
             <div className="context-menu-item" onClick={() => handleAction('cut')}>
-              <span className="context-menu-icon">✂️</span>
+              <span className="context-menu-icon"><Icon icon="✂️" size={16} /></span>
               <span>Cut</span>
             </div>
             <div className="context-menu-item" onClick={() => handleAction('copy')}>
-              <span className="context-menu-icon">📋</span>
+              <span className="context-menu-icon"><Icon icon="📋" size={16} /></span>
               <span>Copy</span>
             </div>
             <div className="context-menu-divider" />
             <div className="context-menu-item" onClick={() => handleAction('rename')}>
-              <span className="context-menu-icon">✏️</span>
+              <span className="context-menu-icon"><Icon icon="note" size={16} /></span>
               <span>Rename</span>
             </div>
             <div className="context-menu-item context-menu-item-danger" onClick={() => handleAction('delete')}>
-              <span className="context-menu-icon">🗑️</span>
+              <span className="context-menu-icon"><Icon icon="trash" size={16} /></span>
               <span>Delete</span>
             </div>
           </>
         )}
         <div className="context-menu-divider" />
         <div className="context-menu-item" onClick={() => handleAction('properties')}>
-          <span className="context-menu-icon">⚙️</span>
+          <span className="context-menu-icon"><Icon icon="settings" size={16} /></span>
           <span>Properties</span>
         </div>
       </>
@@ -295,6 +296,7 @@ export default function ContextMenu() {
       style={{
         left: adjustedPosition.x,
         top: adjustedPosition.y,
+        zIndex: 9999,
       }}
     >
       {renderMenuItems()}

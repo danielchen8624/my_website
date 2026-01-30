@@ -36,9 +36,9 @@ function AppRenderer({ appType, fileId, onClose, windowId }) {
     case 'about':
       return <AboutApp />;
     case 'explorer':
-      return <ExplorerApp folderId={fileId} />;
+      return <ExplorerApp folderId={fileId} windowId={windowId} />;
     case 'mycomputer':
-      return <ExplorerApp folderId="my-computer" />;
+      return <ExplorerApp folderId="my-computer" windowId={windowId} />;
     case 'browser':
       return <InternetExplorerApp />;
     case 'recyclebin':

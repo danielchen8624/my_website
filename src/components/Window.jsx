@@ -1,5 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { useOS } from '../context/OSContext';
+import Icon from './Icon';
 
 export default function Window({
   id,
@@ -208,7 +209,7 @@ export default function Window({
         onDoubleClick={handleHeaderDoubleClick}
       >
         <div className="window-title">
-          <span className="window-title-icon">{icon}</span>
+          <span className="window-title-icon"><Icon icon={icon} size={16} /></span>
           <span>{title}</span>
         </div>
         

@@ -13,7 +13,7 @@ const DEFAULT_FILES = {
     id: 'desktop',
     name: 'Desktop',
     type: 'folder',
-    icon: '🖥️',
+    icon: 'desktop',
     // Desktop children: system items + user files
     children: ['my-computer', 'recycle-bin', 'my-documents', 'about', 'projects', 'skills-file', 'resume', 'contact', 'readme'],
   },
@@ -22,7 +22,7 @@ const DEFAULT_FILES = {
     id: 'my-computer',
     name: 'My Computer',
     type: 'system',
-    icon: '💻',
+    icon: 'my-computer',
     position: { x: 20, y: 10 },
     children: ['drive-c', 'drive-d', 'control-panel'],
     appType: 'mycomputer',
@@ -31,46 +31,46 @@ const DEFAULT_FILES = {
     id: 'drive-c',
     name: '(C:) Local Disk',
     type: 'drive',
-    icon: '🖴',
+    icon: 'hard-drive',
   },
   'drive-d': {
     id: 'drive-d',
     name: '(D:) CD Drive',
     type: 'drive',
-    icon: '💿',
+    icon: 'cd-drive',
   },
   'control-panel': {
     id: 'control-panel',
     name: 'Control Panel',
     type: 'system-folder',
-    icon: '⚙️',
+    icon: 'settings',
     children: ['display-settings', 'sound-settings', 'network-settings'],
   },
   'display-settings': {
     id: 'display-settings',
     name: 'Display',
     type: 'system',
-    icon: '🖥️',
+    icon: 'settings',
     appType: 'properties',
   },
   'sound-settings': {
     id: 'sound-settings',
     name: 'Sound',
     type: 'system',
-    icon: '🔊',
+    icon: 'settings',
   },
   'network-settings': {
     id: 'network-settings',
     name: 'Network',
     type: 'system',
-    icon: '🌐',
+    icon: 'network',
   },
   // Recycle Bin
   'recycle-bin': {
     id: 'recycle-bin',
     name: 'Recycle Bin',
     type: 'system',
-    icon: '🗑️',
+    icon: 'recycle-bin-empty',
     position: { x: 20, y: 85 },
     children: [],
     appType: 'recyclebin',
@@ -80,7 +80,7 @@ const DEFAULT_FILES = {
     id: 'my-documents',
     name: 'My Documents',
     type: 'folder',
-    icon: '📁',
+    icon: 'folder',
     position: { x: 20, y: 160 },
     children: [],
     appType: 'explorer',
@@ -89,7 +89,7 @@ const DEFAULT_FILES = {
     id: 'about',
     name: 'About Me.txt',
     type: 'file',
-    icon: '📝',
+    icon: 'notepad',
     position: { x: 20, y: 235 },
     content: `╔══════════════════════════════════════════════════════════╗
 ║                    ABOUT ME                                ║
@@ -120,7 +120,7 @@ Thanks for visiting! Feel free to explore.
     id: 'projects',
     name: 'My Projects',
     type: 'folder',
-    icon: '📁',
+    icon: 'folder',
     position: { x: 20, y: 310 },
     children: ['project-1', 'project-2', 'project-3'],
     appType: 'explorer',
@@ -129,7 +129,7 @@ Thanks for visiting! Feel free to explore.
     id: 'skills-file',
     name: 'My Skills.txt',
     type: 'file',
-    icon: '📝',
+    icon: 'notepad',
     position: { x: 20, y: 385 },
     content: `╔══════════════════════════════════════════════════════════╗
 ║              MY SKILLS & TECHNOLOGIES                    ║
@@ -170,7 +170,7 @@ Thanks for visiting! Feel free to explore.
     id: 'resume',
     name: 'Resume.doc',
     type: 'file',
-    icon: '📄',
+    icon: 'resume',
     position: { x: 20, y: 460 },
     appType: 'resume',
   },
@@ -178,7 +178,7 @@ Thanks for visiting! Feel free to explore.
     id: 'contact',
     name: 'Contact.txt',
     type: 'file',
-    icon: '📧',
+    icon: 'contact',
     position: { x: 20, y: 535 },
     content: `CONTACT INFORMATION
 ═══════════════════
@@ -195,7 +195,7 @@ Feel free to reach out!`,
     id: 'readme',
     name: 'README.txt',
     type: 'file',
-    icon: '📝',
+    icon: 'notepad',
     position: { x: 20, y: 610 },
     content: `--- WELCOME TO RETRO-OS v1.0 ---
 
@@ -227,7 +227,7 @@ ENJOY YOUR STAY!
     id: 'project-1',
     name: 'Project Alpha',
     type: 'file',
-    icon: '📄',
+    icon: 'browser',
     content: 'A full-stack web application built with React and Node.js',
     link: 'https://github.com',
   },
@@ -235,7 +235,7 @@ ENJOY YOUR STAY!
     id: 'project-2',
     name: 'Project Beta',
     type: 'file',
-    icon: '📄',
+    icon: 'browser',
     content: 'An interactive data visualization dashboard',
     link: 'https://github.com',
   },
@@ -243,7 +243,7 @@ ENJOY YOUR STAY!
     id: 'project-3',
     name: 'Retro OS Website',
     type: 'file',
-    icon: '💻',
+    icon: 'browser',
     content: 'This website! A Windows 95 themed portfolio.',
     link: '#',
   },
@@ -585,7 +585,7 @@ export function FileSystemProvider({ children }) {
     const newId = addFile({
       name: 'New Folder',
       type: 'folder',
-      icon: '📁',
+      icon: 'folder',
       position: { x: 100, y: 100 },
       children: [],
       appType: 'explorer',
@@ -604,7 +604,7 @@ export function FileSystemProvider({ children }) {
     const newId = addFile({
       name: 'New Text Document.txt',
       type: 'file',
-      icon: '📝',
+      icon: 'notepad',
       position: { x: 120, y: 120 },
       content: '',
       appType: 'notepad',
@@ -730,7 +730,7 @@ export function FileSystemProvider({ children }) {
         'recycle-bin': {
           ...recycleBin,
           children: [],
-          icon: '🗑️' // Empty icon
+          icon: 'recycle-bin-empty' // Empty icon
         }
       };
     });

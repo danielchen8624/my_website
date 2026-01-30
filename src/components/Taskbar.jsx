@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useOS } from '../context/OSContext';
+import Icon from './Icon';
 
 export default function Taskbar() {
   const { windows, toggleStartMenu, startMenuOpen, focusWindow, minimizeWindow, openWindow } = useOS();
@@ -37,8 +38,10 @@ export default function Taskbar() {
         className={`start-button ${startMenuOpen ? 'active' : ''}`}
         onClick={toggleStartMenu}
       >
-        <span className="start-button-logo">🪟</span>
-        <span>Start</span>
+        <span className="start-button-logo">
+           <Icon icon="logo" size={18} />
+        </span>
+        <span style={{ fontWeight: 'bold' }}>Start</span>
       </button>
 
       {/* Divider */}
@@ -50,26 +53,26 @@ export default function Taskbar() {
            className="quick-launch-btn" 
            title="Show Desktop"
            onClick={() => {
-             // Logic to minimize all? Or just focus desktop?
-             // For now just a placeholder action or we can implement minimize all in OSContext
-             alert("Show Desktop: TODO");
+             // Minimize all logic placeholder
+             const desktop = document.querySelector('.desktop');
+             if (desktop) desktop.click(); // Hack to defocus windows
            }}
          >
-           🖥️
+           <Icon icon="desktop" size={16} />
          </button>
          <button 
            className="quick-launch-btn" 
            title="Internet Explorer"
-           onClick={() => openWindow('browser', { id: 'browser', name: 'Internet Explorer', icon: '🌐', appType: 'browser' })}
+           onClick={() => openWindow('browser', { id: 'browser', name: 'Internet Explorer', icon: 'browser', appType: 'browser' })}
          >
-           🌐
+           <Icon icon="browser" size={16} />
          </button>
          <button 
            className="quick-launch-btn" 
            title="Winamp"
-           onClick={() => openWindow('winamp', { id: 'winamp', name: 'Winamp', icon: '🎵', appType: 'winamp' })}
+           onClick={() => openWindow('winamp', { id: 'winamp', name: 'Winamp', icon: 'winamp', appType: 'winamp' })}
          >
-           🎵
+           <Icon icon="winamp" size={16} />
          </button>
       </div>
       
@@ -83,7 +86,7 @@ export default function Taskbar() {
             className={`taskbar-window-btn ${!window.isMinimized ? 'active' : ''}`}
             onClick={() => handleWindowClick(window.id, window.isMinimized)}
           >
-            <span className="taskbar-window-btn-icon">{window.icon}</span>
+            <span className="taskbar-window-btn-icon"><Icon icon={window.icon} size={16} /></span>
             <span>{window.title}</span>
           </button>
         ))}
@@ -91,7 +94,7 @@ export default function Taskbar() {
 
       {/* System Tray */}
       <div className="taskbar-tray">
-        <span>🔊</span>
+        <span><Icon icon="settings" size={14} /></span>
         <span className="taskbar-clock">{formattedTime}</span>
       </div>
     </div>

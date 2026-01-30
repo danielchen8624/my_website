@@ -1,5 +1,6 @@
 import { useOS } from '../context/OSContext';
 import { useFileSystem } from '../context/FileSystemContext';
+import Icon from './Icon';
 
 export default function StartMenu() {
   const { startMenuOpen, openWindow, closeStartMenu } = useOS();
@@ -29,7 +30,7 @@ export default function StartMenu() {
         openWindow('winamp', {
           id: 'winamp',
           name: 'Winamp',
-          icon: '🎵',
+          icon: 'winamp',
           appType: 'winamp',
         });
         break;
@@ -37,7 +38,7 @@ export default function StartMenu() {
         openWindow('paint', {
           id: 'paint',
           name: 'Paint',
-          icon: '🎨',
+          icon: 'paint',
           appType: 'paint',
         });
         break;
@@ -45,7 +46,7 @@ export default function StartMenu() {
         openWindow('terminal', {
           id: 'terminal',
           name: 'MS-DOS Prompt',
-          icon: '⬛',
+          icon: 'terminal',
           appType: 'terminal',
         });
         break;
@@ -53,7 +54,7 @@ export default function StartMenu() {
         openWindow('display', {
           id: 'display',
           name: 'Display Properties',
-          icon: '🖥️',
+          icon: 'display',
           appType: 'properties',
         });
         break;
@@ -67,7 +68,7 @@ export default function StartMenu() {
         openWindow('run', {
             id: 'run-dialog',
             name: 'Run',
-            icon: '🏃',
+            icon: 'run',
             appType: 'run',
             isDialog: true,
         });
@@ -75,6 +76,10 @@ export default function StartMenu() {
       case 'reset':
         handleReset();
         return; // Don't close start menu immediately (reload will happen)
+      case 'shutdown':
+           // Just a visual action for now, or maybe show an alert
+           alert('It is now safe to turn off your computer.');
+           break;
       default:
         break;
     }
@@ -82,30 +87,30 @@ export default function StartMenu() {
   };
 
   const menuItems = [
-    { id: 'programs', label: 'Programs', icon: '📂', action: 'programs', hasSubmenu: true },
-    { id: 'documents', label: 'Documents', icon: '📄', action: 'documents' },
+    { id: 'programs', label: 'Programs', icon: 'program', action: 'programs', hasSubmenu: true },
+    { id: 'documents', label: 'Documents', icon: 'folder', action: 'documents' },
     { type: 'divider' },
-    { id: 'internet', label: 'Internet Explorer', icon: '🌐', action: 'internet' },
-    { id: 'winamp', label: 'Winamp', icon: '🎵', action: 'winamp' },
-    { id: 'paint', label: 'Paint', icon: '🎨', action: 'paint' },
-    { id: 'terminal', label: 'MS-DOS Prompt', icon: '⬛', action: 'terminal' },
+    { id: 'internet', label: 'Internet Explorer', icon: 'internet-explorer', action: 'internet' },
+    { id: 'winamp', label: 'Winamp', icon: 'winamp', action: 'winamp' },
+    { id: 'paint', label: 'Paint', icon: 'paint', action: 'paint' },
+    { id: 'terminal', label: 'MS-DOS Prompt', icon: 'terminal', action: 'terminal' },
     { type: 'divider' },
-    { id: 'mycomputer', label: 'My Computer', icon: '💻', action: 'mycomputer' },
-    { id: 'display', label: 'Display Properties', icon: '🖥️', action: 'display' },
+    { id: 'mycomputer', label: 'My Computer', icon: 'my-computer', action: 'mycomputer' },
+    { id: 'display', label: 'Display Properties', icon: 'display', action: 'display' },
     { type: 'divider' },
-    { id: 'newfolder', label: 'New Folder', icon: '📁', action: 'newfolder' },
-    { id: 'newfile', label: 'New Text File', icon: '📝', action: 'newfile' },
+    { id: 'newfolder', label: 'New Folder', icon: 'folder', action: 'newfolder' },
+    { id: 'newfile', label: 'New Text File', icon: 'notepad', action: 'newfile' },
     { type: 'divider' },
     { type: 'divider' },
-    { id: 'reset', label: 'Reset System...', icon: '⚠️', action: 'reset' },
-    { id: 'run', label: 'Run...', icon: '🏃', action: 'run' },
+    { id: 'reset', label: 'Reset System...', icon: 'reset', action: 'reset' },
+    { id: 'run', label: 'Run...', icon: 'run', action: 'run' },
     { type: 'divider' },
-    { id: 'shutdown', label: 'Shut Down...', icon: '🔌', action: 'shutdown' },
+    { id: 'shutdown', label: 'Shut Down...', icon: 'shutdown', action: 'shutdown' },
   ];
 
   const handleReset = () => {
     if (confirm('⚠️ WARNING: This will reset all files, settings, and changes to default.\n\nAre you sure you want to continue?')) {
-      localStorage.removeItem('retro-os-filesystem-v3');
+      localStorage.removeItem('retro-os-filesystem-v4'); // Updated to v4
       localStorage.removeItem('retroos-wallpaper');
       window.location.reload();
     }
@@ -144,7 +149,9 @@ export default function StartMenu() {
                 className="start-menu-item"
                 onClick={() => item.action && handleItemClick(item.action)}
               >
-                <span className="start-menu-item-icon">{item.icon}</span>
+                <div className="start-menu-item-icon">
+                  <Icon icon={item.icon} size={24} />
+                </div>
                 <span>{item.label}</span>
                 {item.hasSubmenu && <span style={{ marginLeft: 'auto' }}>▶</span>}
               </div>

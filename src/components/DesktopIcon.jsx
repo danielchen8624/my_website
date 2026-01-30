@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useOS } from '../context/OSContext';
 import { useFileSystem } from '../context/FileSystemContext';
 import { setSelectedFile } from './KeyboardShortcuts';
+import Icon from './Icon';
 
 export default function DesktopIcon({ file, isSelected: isSelectedProp = false }) {
   const { openWindow } = useOS();
@@ -143,160 +144,165 @@ export default function DesktopIcon({ file, isSelected: isSelectedProp = false }
   const handleMouseDown = useCallback((e) => {
     if (isRenaming) return;
     if (e.button !== 0) return; // Only left click
-
-    // Check if this icon is part of a multi-selection
-    const selectedIds = window.__selectedFileIds || [];
-    const isPartOfSelection = selectedIds.includes(file.id);
-
-    if (isPartOfSelection && selectedIds.length > 1) {
-      // Dragging a group - keep the selection
-      isGroupDragRef.current = true;
-    } else {
-      // Not part of selection or single selection - select only this icon
-      isGroupDragRef.current = false;
-      setIsSelectedLocal(true);
-      // Clear other selections and select only this one
-      window.dispatchEvent(new CustomEvent('desktopSelection', {
-        detail: { selectedIds: [file.id] }
-      }));
+    
+    // If not already selected, select this one
+    // But don't immediately clear others if we are about to drag a group.
+    // The safest bet is: if we click an unselected icon, we select it (and others clear via click handler).
+    // If we click a selected icon, we DO NOT clear selection, in case we are about to drag the group.
+    // However, the click handler runs AFTER drag end if no drag occurred.
+    
+    if (!isSelected) {
+       setIsSelectedLocal(true);
     }
-
+    
     // Record start position for threshold check
     dragStartPosRef.current = { x: e.clientX, y: e.clientY };
     lastMousePosRef.current = { x: e.clientX, y: e.clientY };
     hasDraggedRef.current = false;
+    
+    // Check if we are part of a group drag
+    // We check the DOM for simplicity to see who is currently selected
+    // Note: React state updates might be pending, but classnames 'selected' should be reliable if rendered
+    const selectedIds = Array.from(document.querySelectorAll('.desktop-icon.selected')).map(el => el.dataset.fileId);
+    
+    // If WE are selected, and there are multiple selected, it's a group drag
+    // If we weren't selected before mouse down, we just selected ourselves locally, so we should be included effectively.
+    
+    const effectiveSelectedIds = isSelected ? selectedIds : [...selectedIds, file.id];
+    const isGroup = effectiveSelectedIds.includes(file.id) && effectiveSelectedIds.length > 1;
+    
+    isGroupDragRef.current = isGroup;
 
-    // Set dragging state (but actual visual dragging starts after threshold)
-    setIsDragging(true);
-
-    // Emit for cross-window drop
+    // Emit for cross-window drop (only single file support for now in other apps)
     window.__draggingFileId = file.id;
-
+    
     const rect = iconRef.current.getBoundingClientRect();
     setDragOffset({
       x: e.clientX - rect.left,
       y: e.clientY - rect.top,
     });
-  }, [isRenaming, file.id]);
+
+    setIsDragging(true);
+  }, [isRenaming, file.id, isSelected]);
 
   // Drag move and end
   useEffect(() => {
     if (!isDragging) return;
 
     const handleMouseMove = (e) => {
-      // Check if we've exceeded drag threshold
-      const dx = Math.abs(e.clientX - dragStartPosRef.current.x);
-      const dy = Math.abs(e.clientY - dragStartPosRef.current.y);
-
-      if (dx < DRAG_THRESHOLD && dy < DRAG_THRESHOLD) {
-        return; // Haven't moved enough to be a drag
+      // Check dragging threshold first
+      if (!hasDraggedRef.current) {
+        const dx = Math.abs(e.clientX - dragStartPosRef.current.x);
+        const dy = Math.abs(e.clientY - dragStartPosRef.current.y);
+        if (dx < DRAG_THRESHOLD && dy < DRAG_THRESHOLD) return;
+        hasDraggedRef.current = true;
       }
-
-      hasDraggedRef.current = true;
-
-      const desktop = document.querySelector('.desktop');
-      if (!desktop) return;
-
-      const desktopRect = desktop.getBoundingClientRect();
-
-      // Calculate delta from last mouse position
+      
+      // Calculate delta from last frame
       const deltaX = e.clientX - lastMousePosRef.current.x;
       const deltaY = e.clientY - lastMousePosRef.current.y;
       lastMousePosRef.current = { x: e.clientX, y: e.clientY };
+      
+      const desktop = document.querySelector('.desktop');
+      if (!desktop) return;
+      
+      const desktopRect = desktop.getBoundingClientRect();
+      
+      // Helper to move an element visually
+      const moveIconElement = (element) => {
+        // We use style.left/top directly. 
+        // Note: element.style.left might be set from React, so we need consistent units (px)
+        // Parsing current computed style is safer
+        const rect = element.getBoundingClientRect();
+        const currentLeft = rect.left - desktopRect.left;
+        const currentTop = rect.top - desktopRect.top;
+        
+        const newLeft = currentLeft + deltaX;
+        const newTop = currentTop + deltaY;
+        
+        element.style.left = `${newLeft}px`;
+        element.style.top = `${newTop}px`;
+      };
 
-      // Get all selected file IDs
-      const selectedIds = isGroupDragRef.current ? (window.__selectedFileIds || [file.id]) : [file.id];
-
-      // Move all selected icons visually
-      selectedIds.forEach(selectedId => {
-        const iconEl = document.querySelector(`[data-file-id="${selectedId}"]`);
-        if (iconEl) {
-          const currentLeft = parseFloat(iconEl.style.left) || 0;
-          const currentTop = parseFloat(iconEl.style.top) || 0;
-
-          let newX = currentLeft + deltaX;
-          let newY = currentTop + deltaY;
-
-          // Constrain to desktop bounds
-          newX = Math.max(0, Math.min(newX, desktopRect.width - 80));
-          newY = Math.max(0, Math.min(newY, desktopRect.height - 80));
-
-          iconEl.style.left = `${newX}px`;
-          iconEl.style.top = `${newY}px`;
-        }
-      });
-
-      // Check for drop targets (only for single icon drag or folder targets)
+      if (isGroupDragRef.current) {
+         // Move ALL selected icons
+         document.querySelectorAll('.desktop-icon.selected').forEach(el => {
+            moveIconElement(el);
+         });
+         // Also move self if not yet marked selected in DOM (corner case)
+         if (!isSelectedLocal && !isSelectedProp) {
+            if (iconRef.current) moveIconElement(iconRef.current);
+         }
+      } else {
+         // Move just this one
+         if (iconRef.current) moveIconElement(iconRef.current);
+      }
+      
+      // Check drop target
       const targetId = checkDropTarget(e.clientX, e.clientY);
-
-      // Highlight drop target
-      document.querySelectorAll('.desktop-icon').forEach(el => {
-        el.classList.remove('drop-target');
-      });
-
+      document.querySelectorAll('.desktop-icon').forEach(el => el.classList.remove('drop-target'));
       if (targetId) {
         const targetElement = document.querySelector(`[data-file-id="${targetId}"]`);
-        if (targetElement) {
-          targetElement.classList.add('drop-target');
-        }
+        if (targetElement) targetElement.classList.add('drop-target');
       }
     };
 
     const handleMouseUp = (e) => {
       setIsDragging(false);
-
-      // Clear global drag state
       window.__draggingFileId = null;
-
-      // Clear drop target highlights
-      document.querySelectorAll('.desktop-icon').forEach(el => {
-        el.classList.remove('drop-target');
-      });
-
-      // If we didn't actually drag, don't update position
-      if (!hasDraggedRef.current) {
-        return;
-      }
-
-      const desktop = document.querySelector('.desktop');
-      if (!desktop) return;
-
-      const desktopRect = desktop.getBoundingClientRect();
-
-      // Get all selected file IDs
-      const selectedIds = isGroupDragRef.current ? (window.__selectedFileIds || [file.id]) : [file.id];
-
-      // Check if dropped on a folder/recycle bin (only for single file or if target accepts multiple)
+      document.querySelectorAll('.desktop-icon').forEach(el => el.classList.remove('drop-target'));
+      
+      if (!hasDraggedRef.current) return;
+      
       const targetId = checkDropTarget(e.clientX, e.clientY);
-
+      
       if (targetId) {
-        // Move all selected files to the target folder/bin
-        selectedIds.forEach(selectedId => {
-          moveFileToFolder(selectedId, targetId);
-        });
+        // Move to folder logic
+        if (isGroupDragRef.current) {
+           document.querySelectorAll('.desktop-icon.selected').forEach(el => {
+              moveFileToFolder(el.dataset.fileId, targetId);
+           });
+           // Also move self if needed
+           if (!isSelectedLocal && !isSelectedProp) moveFileToFolder(file.id, targetId);
+        } else {
+           moveFileToFolder(file.id, targetId);
+        }
       } else {
-        // Regular position update for all selected icons
-        selectedIds.forEach(selectedId => {
-          const iconEl = document.querySelector(`[data-file-id="${selectedId}"]`);
-          if (iconEl) {
-            const newX = parseFloat(iconEl.style.left) || 0;
-            const newY = parseFloat(iconEl.style.top) || 0;
-            moveFile(selectedId, newX, newY);
-          }
-        });
-      }
+        // Finalize positions in state
+        const finalizePosition = (element, id) => {
+           const rect = element.getBoundingClientRect();
+           const desktop = document.querySelector('.desktop');
+           const desktopRect = desktop.getBoundingClientRect();
+           
+           let x = rect.left - desktopRect.left;
+           let y = rect.top - desktopRect.top;
+           
+           // Constrain locally
+           x = Math.max(0, Math.min(x, desktopRect.width - 84));
+           y = Math.max(0, Math.min(y, desktopRect.height - 80));
+           
+           moveFile(id, x, y);
+        };
 
-      isGroupDragRef.current = false;
+        if (isGroupDragRef.current) {
+            document.querySelectorAll('.desktop-icon.selected').forEach(el => {
+                finalizePosition(el, el.dataset.fileId);
+            });
+            if (!isSelectedLocal && !isSelectedProp) finalizePosition(iconRef.current, file.id);
+        } else {
+            finalizePosition(iconRef.current, file.id);
+        }
+      }
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, dragOffset, file.id, moveFile, moveFileToFolder, checkDropTarget]);
+  }, [isDragging, file.id, moveFile, moveFileToFolder, checkDropTarget, isSelectedLocal, isSelectedProp]);
 
   // Deselect when clicking elsewhere
   useEffect(() => {
@@ -314,6 +320,12 @@ export default function DesktopIcon({ file, isSelected: isSelectedProp = false }
   }, [isRenaming, handleRenameSubmit]);
 
   const position = file.position || { x: 20, y: 20 };
+  
+  // Resolve icon for the Icon component
+  let iconKey = file.icon;
+  if (file.id === 'recycle-bin') {
+      iconKey = (file.children && file.children.length > 0) ? 'recycle-bin-full' : 'recycle-bin-empty';
+  }
 
   return (
     <div 
@@ -331,9 +343,7 @@ export default function DesktopIcon({ file, isSelected: isSelectedProp = false }
       onMouseDown={handleMouseDown}
     >
       <div className="desktop-icon-image">
-        {file.id === 'recycle-bin' 
-          ? (file.children && file.children.length > 0 ? '🚮' : '🗑️')
-          : file.icon}
+         <Icon icon={iconKey} size={32} />
       </div>
       
       {isRenaming ? (
