@@ -23,11 +23,11 @@ const ICON_MAP = {
   'notepad': 'notepad-4.png',
   'note': 'notepad-4.png', 
   'computer': 'computer_explorer-4.png', 
-  'paint': 'paint_file-4.png', // Try paint_file or pbrush
+  'paint': 'paint_file-4.png', 
   'calculator': 'calculator-4.png',
-  'minesweeper': 'mine_sweeper-4.png', // Corrected name
-  'winamp': 'cd_audio_cd-4.png', // Try cd_audio_cd
-  'terminal': 'console_prompt-4.png',
+  'minesweeper': 'mine_sweeper-4.png', 
+  'winamp': 'cd_audio_cd-4.png', 
+  'terminal': 'console_prompt-0.png', // Correct Black Box Icon
   'internet-explorer': 'msie1-4.png',
   'browser': 'msie1-4.png',
   'outlook': 'outlook_express-4.png',
@@ -37,10 +37,11 @@ const ICON_MAP = {
   'trash': 'recycle_bin_full-4.png',
   'logo': 'windows-4.png', 
   'desktop': 'desktop-4.png',
-  'run': 'application_hourglass-4.png', // Fallback for run
+  'run': 'application_run-0.png', // Correct Run Icon
   'shutdown': 'shut_down_cool-4.png',
-  'reset': 'msg_warning-4.png', // For reset system
-  'display': 'display_properties-4.png', // For display properties
+  'reset': 'msg_warning-0.png', // Correct Warning Icon
+  'display': 'display_properties-4.png',
+  'program': 'directory_program_group_small-4.png', // Correct Programs Icon
 };
 
 export default function Icon({ icon, size = 32, className = '', ...props }) {
