@@ -20,6 +20,7 @@ import PaintApp from './apps/PaintApp';
 import TerminalApp from './apps/TerminalApp';
 import DisplayPropertiesApp from './apps/DisplayPropertiesApp';
 import RecycleBinApp from './apps/RecycleBinApp';
+import ResumeApp from './apps/ResumeApp';
 
 // Render the appropriate app based on type
 function AppRenderer({ appType, fileId, onClose }) {
@@ -46,6 +47,8 @@ function AppRenderer({ appType, fileId, onClose }) {
       return <ContactApp />;
     case 'properties':
       return <DisplayPropertiesApp onClose={onClose} />;
+    case 'resume':
+      return <ResumeApp />;
     default:
       return <div style={{ padding: 16 }}>Unknown app type: {appType}</div>;
   }

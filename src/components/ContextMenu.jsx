@@ -117,12 +117,16 @@ export default function ContextMenu() {
         }
         break;
       case 'paste':
-        pasteFile();
+        pasteFile(currentFolderId);
         break;
       case 'rename':
-        // Dispatch custom event to trigger rename mode
+        // Dispatch custom event to trigger rename mode after a small delay
+        // This ensures React has processed any state changes before the rename starts
         if (targetId) {
-          window.dispatchEvent(new CustomEvent('startRename', { detail: { fileId: targetId } }));
+          const fileIdToRename = targetId;
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('startRename', { detail: { fileId: fileIdToRename } }));
+          }, 50);
         }
         break;
       case 'properties':
@@ -173,30 +177,37 @@ export default function ContextMenu() {
     }
 
     // File or Folder menu
+    const targetFile = targetId ? getFile(targetId) : null;
+    const isSystemFile = targetFile?.type === 'system';
+    
     return (
       <>
         <div className="context-menu-item" onClick={() => handleAction('open')}>
           <span className="context-menu-icon">📂</span>
           <span>Open</span>
         </div>
-        <div className="context-menu-divider" />
-        <div className="context-menu-item" onClick={() => handleAction('cut')}>
-          <span className="context-menu-icon">✂️</span>
-          <span>Cut</span>
-        </div>
-        <div className="context-menu-item" onClick={() => handleAction('copy')}>
-          <span className="context-menu-icon">📋</span>
-          <span>Copy</span>
-        </div>
-        <div className="context-menu-divider" />
-        <div className="context-menu-item" onClick={() => handleAction('rename')}>
-          <span className="context-menu-icon">✏️</span>
-          <span>Rename</span>
-        </div>
-        <div className="context-menu-item context-menu-item-danger" onClick={() => handleAction('delete')}>
-          <span className="context-menu-icon">🗑️</span>
-          <span>Delete</span>
-        </div>
+        {!isSystemFile && (
+          <>
+            <div className="context-menu-divider" />
+            <div className="context-menu-item" onClick={() => handleAction('cut')}>
+              <span className="context-menu-icon">✂️</span>
+              <span>Cut</span>
+            </div>
+            <div className="context-menu-item" onClick={() => handleAction('copy')}>
+              <span className="context-menu-icon">📋</span>
+              <span>Copy</span>
+            </div>
+            <div className="context-menu-divider" />
+            <div className="context-menu-item" onClick={() => handleAction('rename')}>
+              <span className="context-menu-icon">✏️</span>
+              <span>Rename</span>
+            </div>
+            <div className="context-menu-item context-menu-item-danger" onClick={() => handleAction('delete')}>
+              <span className="context-menu-icon">🗑️</span>
+              <span>Delete</span>
+            </div>
+          </>
+        )}
         <div className="context-menu-divider" />
         <div className="context-menu-item" onClick={() => handleAction('properties')}>
           <span className="context-menu-icon">⚙️</span>

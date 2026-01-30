@@ -20,7 +20,7 @@ export function getCurrentFolder() {
 }
 
 export default function KeyboardShortcuts() {
-  const { copyFile, cutFile, pasteFile, deleteFile, clipboard } = useFileSystem();
+  const { copyFile, cutFile, pasteFile, deleteFile, clipboard, getFile } = useFileSystem();
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -32,22 +32,24 @@ export default function KeyboardShortcuts() {
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
       const modKey = isMac ? e.metaKey : e.ctrlKey;
 
+      // Get selected file and check if it's a system file
+      const selectedFile = window.__selectedFileId ? getFile(window.__selectedFileId) : null;
+      const isSystemFile = selectedFile?.type === 'system';
+
       if (modKey) {
         switch (e.key.toLowerCase()) {
           case 'c':
-            // Copy
-            if (window.__selectedFileId) {
+            // Copy (not for system files)
+            if (window.__selectedFileId && !isSystemFile) {
               e.preventDefault();
               copyFile(window.__selectedFileId);
-              console.log('Copied:', window.__selectedFileId);
             }
             break;
           case 'x':
-            // Cut
-            if (window.__selectedFileId) {
+            // Cut (not for system files)
+            if (window.__selectedFileId && !isSystemFile) {
               e.preventDefault();
               cutFile(window.__selectedFileId);
-              console.log('Cut:', window.__selectedFileId);
             }
             break;
           case 'v':
@@ -55,7 +57,6 @@ export default function KeyboardShortcuts() {
             if (clipboard) {
               e.preventDefault();
               pasteFile(window.__currentFolderId || 'desktop');
-              console.log('Pasted to:', window.__currentFolderId);
             }
             break;
           default:
@@ -63,8 +64,8 @@ export default function KeyboardShortcuts() {
         }
       }
 
-      // Delete key
-      if (e.key === 'Delete' && window.__selectedFileId) {
+      // Delete key (not for system files)
+      if (e.key === 'Delete' && window.__selectedFileId && !isSystemFile) {
         e.preventDefault();
         deleteFile(window.__selectedFileId);
         window.__selectedFileId = null;
@@ -73,7 +74,8 @@ export default function KeyboardShortcuts() {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [copyFile, cutFile, pasteFile, deleteFile, clipboard]);
+  }, [copyFile, cutFile, pasteFile, deleteFile, clipboard, getFile]);
 
   return null; // This component doesn't render anything
 }
+

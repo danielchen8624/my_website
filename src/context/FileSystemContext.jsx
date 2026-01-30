@@ -13,7 +13,7 @@ const DEFAULT_FILES = {
     name: 'Desktop',
     type: 'folder',
     icon: '🖥️',
-    children: ['about', 'projects', 'contact', 'skills', 'recycle-bin', 'skills-file'],
+    children: ['about', 'projects', 'contact', 'skills', 'recycle-bin', 'skills-file', 'resume'],
   },
   'about': {
     id: 'about',
@@ -162,6 +162,14 @@ Feel free to reach out!`,
                     Always learning more! 📚`,
     appType: 'notepad',
   },
+  'resume': {
+    id: 'resume',
+    name: 'Resume.doc',
+    type: 'file',
+    icon: '📄',
+    position: { x: 20, y: 620 },
+    appType: 'resume',
+  },
 };
 
 // Load from localStorage or use defaults
@@ -284,12 +292,17 @@ export function FileSystemProvider({ children }) {
     return current;
   }, [files]);
 
-  // Rename a file
+  // Rename a file (but not system files)
   const renameFile = useCallback((id, newName) => {
-    setFiles(prev => ({
-      ...prev,
-      [id]: { ...prev[id], name: newName }
-    }));
+    setFiles(prev => {
+      const file = prev[id];
+      // Don't rename system files
+      if (!file || file.type === 'system') return prev;
+      return {
+        ...prev,
+        [id]: { ...prev[id], name: newName }
+      };
+    });
   }, []);
 
   // Update file content
@@ -311,9 +324,11 @@ export function FileSystemProvider({ children }) {
   // Add a new file
   const addFile = useCallback((file, parentId = 'desktop') => {
     const newId = `file-${Date.now()}`;
+    // Destructure to exclude any existing id from the source file
+    const { id: _ignoreId, ...fileWithoutId } = file;
     const newFile = {
-      id: newId,
-      ...file,
+      ...fileWithoutId,
+      id: newId, // Ensure new ID is always used
     };
     
     setFiles(prev => {
@@ -331,22 +346,35 @@ export function FileSystemProvider({ children }) {
     return newId;
   }, []);
 
-  // Delete a file
-  const deleteFile = useCallback((id, parentId = 'desktop') => {
+  // Delete a file (move to recycle bin)
+  const deleteFile = useCallback((id, parentId = null) => {
     setFiles(prev => {
-      const { [id]: deleted, ...rest } = prev;
-      const parent = rest[parentId];
+      const fileToDelete = prev[id];
+      // Don't delete system files
+      if (!fileToDelete || fileToDelete.type === 'system') return prev;
       
-      // Move to recycle bin instead of permanent delete
-      const recycleBin = rest['recycle-bin'];
+      // Find parent if not provided
+      let actualParentId = parentId;
+      if (!actualParentId) {
+        for (const [key, file] of Object.entries(prev)) {
+          if (file.children?.includes(id)) {
+            actualParentId = key;
+            break;
+          }
+        }
+      }
+      
+      if (!actualParentId) return prev;
+      
+      const parent = prev[actualParentId];
+      const recycleBin = prev['recycle-bin'];
       
       return {
-        ...rest,
-        [parentId]: {
+        ...prev,
+        [actualParentId]: {
           ...parent,
           children: parent.children?.filter(childId => childId !== id) || []
         },
-        [id]: deleted, // Keep the file
         'recycle-bin': {
           ...recycleBin,
           children: [...(recycleBin.children || []), id]
@@ -355,40 +383,61 @@ export function FileSystemProvider({ children }) {
     });
   }, []);
 
+  // Check if a file can be copied/cut (not a system file)
+  const canModifyFile = useCallback((id) => {
+    const file = files[id];
+    return file && file.type !== 'system';
+  }, [files]);
+
   // Copy file to clipboard
   const copyFile = useCallback((id) => {
+    if (!canModifyFile(id)) return false;
     setClipboard({ type: 'copy', fileId: id });
-  }, []);
+    return true;
+  }, [canModifyFile]);
 
   // Cut file to clipboard
   const cutFile = useCallback((id) => {
+    if (!canModifyFile(id)) return false;
     setClipboard({ type: 'cut', fileId: id });
-  }, []);
+    return true;
+  }, [canModifyFile]);
 
   // Paste from clipboard
   const pasteFile = useCallback((targetFolderId = 'desktop') => {
-    if (!clipboard) return;
+    if (!clipboard) return null;
     
-    const sourceFile = files[clipboard.fileId];
-    if (!sourceFile) return;
+    const clipboardData = clipboard; // Capture clipboard value
+    const sourceFile = files[clipboardData.fileId];
+    if (!sourceFile) return null;
     
-    if (clipboard.type === 'copy') {
-      // Create a copy
-      addFile({
-        ...sourceFile,
+    if (clipboardData.type === 'copy') {
+      // Create a copy - destructure to exclude id and children (folders get fresh empty children)
+      const { id: _id, children: _children, ...fileToCopy } = sourceFile;
+      const newId = addFile({
+        ...fileToCopy,
         name: `${sourceFile.name} - Copy`,
         position: {
           x: (sourceFile.position?.x || 20) + 20,
           y: (sourceFile.position?.y || 20) + 20,
-        }
+        },
+        // If it's a folder, give it empty children array
+        ...(sourceFile.type === 'folder' ? { children: [] } : {})
       }, targetFolderId);
-    } else if (clipboard.type === 'cut') {
+      // Don't clear clipboard after copy - user might want to paste multiple times
+      return newId;
+    } else if (clipboardData.type === 'cut') {
       // Move the file
+      const fileIdToMove = clipboardData.fileId;
+      
+      // Clear clipboard first to prevent double-paste
+      setClipboard(null);
+      
       setFiles(prev => {
-        // Find current parent
+        // Find current parent by checking all folders' children arrays
         let currentParentId = null;
         for (const [key, file] of Object.entries(prev)) {
-          if (file.children?.includes(clipboard.fileId)) {
+          if (file.children && Array.isArray(file.children) && file.children.includes(fileIdToMove)) {
             currentParentId = key;
             break;
           }
@@ -396,24 +445,46 @@ export function FileSystemProvider({ children }) {
         
         if (!currentParentId) return prev;
         
+        // Don't move to same folder
+        if (currentParentId === targetFolderId) return prev;
+        
         const currentParent = prev[currentParentId];
         const targetParent = prev[targetFolderId];
+        
+        if (!targetParent) return prev;
+        
+        // Check if file is already in target (prevent duplicates)
+        if (targetParent.children && targetParent.children.includes(fileIdToMove)) {
+          return prev;
+        }
+        
+        const movedFile = prev[fileIdToMove];
+        const updatedChildren = currentParent.children.filter(id => id !== fileIdToMove);
+        const newTargetChildren = [...(targetParent.children || []), fileIdToMove];
         
         return {
           ...prev,
           [currentParentId]: {
             ...currentParent,
-            children: currentParent.children.filter(id => id !== clipboard.fileId)
+            children: updatedChildren
           },
           [targetFolderId]: {
             ...targetParent,
-            children: [...(targetParent.children || []), clipboard.fileId]
+            children: newTargetChildren
+          },
+          // Update position for desktop, remove for folders
+          [fileIdToMove]: {
+            ...movedFile,
+            position: targetFolderId === 'desktop' 
+              ? (movedFile.position || { x: 100, y: 100 })
+              : undefined
           }
         };
       });
+      
+      return fileIdToMove;
     }
-    
-    setClipboard(null);
+    return null;
   }, [clipboard, files, addFile]);
 
   // Create new folder
@@ -566,6 +637,7 @@ export function FileSystemProvider({ children }) {
     cutFile,
     pasteFile,
     clipboard,
+    canModifyFile,
     createFolder,
     createTextFile,
     resetFileSystem,

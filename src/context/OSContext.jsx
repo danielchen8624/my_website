@@ -9,6 +9,7 @@ const DEFAULT_WINDOW_SIZES = {
   explorer: { width: 600, height: 450 },
   browser: { width: 800, height: 600 },
   mycomputer: { width: 550, height: 400 },
+  resume: { width: 700, height: 750 },
   default: { width: 500, height: 400 },
 };
 

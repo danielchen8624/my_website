@@ -1,0 +1,229 @@
+/* WordPad-style Resume App */
+.resume-app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #c0c0c0;
+}
+
+/* Toolbar */
+.resume-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  background: #c0c0c0;
+  border-bottom: 1px solid #808080;
+}
+
+.toolbar-group {
+  display: flex;
+  gap: 2px;
+}
+
+.toolbar-btn {
+  width: 24px;
+  height: 22px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toolbar-btn:hover {
+  border: 1px outset #fff;
+  background: #d4d4d4;
+}
+
+.toolbar-btn:active {
+  border: 1px inset #808080;
+}
+
+.format-btn {
+  font-family: 'Times New Roman', serif;
+  font-size: 14px;
+  width: 22px;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: linear-gradient(to bottom, #808080, #fff);
+  margin: 0 4px;
+}
+
+.toolbar-select {
+  height: 20px;
+  font-size: 11px;
+  border: 1px inset #808080;
+  background: #fff;
+  font-family: 'MS Sans Serif', sans-serif;
+}
+
+.toolbar-size {
+  width: 45px;
+}
+
+/* Ruler */
+.resume-ruler {
+  height: 18px;
+  background: #fff;
+  border-bottom: 1px solid #808080;
+  overflow: hidden;
+}
+
+.ruler-marks {
+  display: flex;
+  padding-left: 20px;
+}
+
+.ruler-mark {
+  width: 48px;
+  font-size: 9px;
+  color: #000;
+  text-align: left;
+  position: relative;
+}
+
+.ruler-mark::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12px;
+  width: 1px;
+  height: 6px;
+  background: #000;
+}
+
+/* Document Content Area */
+.resume-content {
+  flex: 1;
+  overflow: auto;
+  background: #808080;
+  padding: 16px;
+}
+
+.resume-paper {
+  background: #fff;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 40px 50px;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+  font-family: 'Arial', sans-serif;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #000;
+}
+
+/* Resume Header */
+.resume-header {
+  text-align: center;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #000;
+}
+
+.resume-header h1 {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.contact-info {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  font-size: 10px;
+}
+
+.contact-info a {
+  color: #0000cc;
+  text-decoration: underline;
+}
+
+.contact-info a:hover {
+  color: #0000ff;
+}
+
+/* Section */
+.resume-section {
+  margin-bottom: 12px;
+}
+
+.resume-section h2 {
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  border-bottom: 1px solid #000;
+  padding-bottom: 2px;
+  margin: 0 0 8px 0;
+}
+
+/* Entry */
+.resume-entry {
+  margin-bottom: 10px;
+}
+
+.entry-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.entry-header strong {
+  font-size: 11px;
+}
+
+.entry-date,
+.entry-location,
+.entry-tech {
+  font-size: 10px;
+  color: #333;
+}
+
+.entry-tech {
+  font-style: italic;
+}
+
+.entry-subheader {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  margin-bottom: 4px;
+}
+
+/* Lists */
+.resume-paper ul {
+  margin: 4px 0;
+  padding-left: 18px;
+}
+
+.resume-paper li {
+  margin-bottom: 3px;
+  text-align: justify;
+}
+
+.skills-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.skills-list li {
+  margin-bottom: 2px;
+}
+
+/* Links in content */
+.resume-paper a {
+  color: #0000cc;
+  text-decoration: underline;
+}
+
+.resume-paper a:hover {
+  color: #0000ff;
+}
