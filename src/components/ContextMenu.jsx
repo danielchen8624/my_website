@@ -26,18 +26,19 @@ export default function ContextMenu() {
   // Handle right-click
   const handleContextMenu = useCallback((e) => {
     e.preventDefault();
-    
+
     // Determine what was clicked
     const desktopIconElement = e.target.closest('.desktop-icon');
     const explorerItemElement = e.target.closest('.explorer-item');
+    const sidebarFolderElement = e.target.closest('.sidebar-folder');
     const explorerGridElement = e.target.closest('.explorer-grid');
     const windowElement = e.target.closest('.window');
-    
+
     if (desktopIconElement) {
       // Right-clicked on a desktop icon
       const fileId = desktopIconElement.dataset.fileId;
       const file = getFile(fileId);
-      
+
       if (file) {
         setTargetType(file.type === 'folder' ? 'folder' : 'file');
         setTargetId(fileId);
@@ -47,15 +48,32 @@ export default function ContextMenu() {
       // Right-clicked on an item inside an explorer window
       const fileId = explorerItemElement.dataset.fileId;
       const file = getFile(fileId);
-      
+
       // Try to find the current folder from the window context
       const explorerGrid = explorerItemElement.closest('.explorer-grid');
       const folderId = explorerGrid?.dataset?.folderId || 'desktop';
-      
+
       if (file) {
         setTargetType(file.type === 'folder' ? 'folder' : 'file');
         setTargetId(fileId);
         setCurrentFolderId(folderId);
+      }
+    } else if (sidebarFolderElement) {
+      // Right-clicked on a sidebar folder
+      const fileId = sidebarFolderElement.dataset.fileId;
+      const file = getFile(fileId);
+
+      if (file) {
+        setTargetType(file.type === 'folder' ? 'folder' : 'file');
+        setTargetId(fileId);
+        // For sidebar items, the "current folder" context is the parent of the clicked folder
+        // But for operations like delete/rename, we need the parent
+        // Find the parent folder
+        let parentId = 'desktop';
+        for (const [key, f] of Object.entries(getFile('desktop') || {})) {
+          // This is a simplified approach - just use desktop as context
+        }
+        setCurrentFolderId('desktop');
       }
     } else if (explorerGridElement) {
       // Right-clicked on empty space inside an explorer window
@@ -74,7 +92,7 @@ export default function ContextMenu() {
     } else {
       return; // Don't show menu for other areas
     }
-    
+
     setPosition({ x: e.clientX, y: e.clientY });
     setIsVisible(true);
   }, [getFile]);

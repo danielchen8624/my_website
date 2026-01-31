@@ -738,6 +738,12 @@ body {
   color: #ffffff;
 }
 
+.sidebar-folder.drop-target {
+  background-color: rgba(0, 0, 128, 0.3);
+  outline: 2px dashed #000080;
+  outline-offset: -2px;
+}
+
 .folder-toggle {
   font-size: 8px;
   width: 12px;

@@ -6,7 +6,7 @@ import Taskbar from './components/Taskbar';
 import StartMenu from './components/StartMenu';
 import DesktopIcon from './components/DesktopIcon';
 import ContextMenu from './components/ContextMenu';
-import KeyboardShortcuts from './components/KeyboardShortcuts';
+import KeyboardShortcuts, { setSelectedFiles } from './components/KeyboardShortcuts';
 import BiosBoot from './components/BiosBoot';
 import SplashScreen from './components/SplashScreen';
 import BSOD from './components/BSOD';
@@ -95,6 +95,8 @@ function Desktop() {
 
       const newSelection = e.detail?.selectedIds || [];
       setSelectedFileIds(newSelection);
+      // Sync with global keyboard shortcut tracker
+      setSelectedFiles(newSelection, 'desktop');
     };
 
     window.addEventListener('desktopSelection', handleExternalSelection);
@@ -207,6 +209,7 @@ function Desktop() {
         });
 
         setSelectedFileIds(selectedIds);
+        setSelectedFiles(selectedIds, 'desktop');
         window.dispatchEvent(new CustomEvent('desktopSelection', {
           detail: { selectedIds, source: 'app' }
         }));
@@ -219,6 +222,7 @@ function Desktop() {
       } else {
         // It was just a click, clear selection
         setSelectedFileIds([]);
+        setSelectedFiles([], 'desktop');
         window.dispatchEvent(new CustomEvent('desktopSelection', {
           detail: { selectedIds: [], source: 'app' }
         }));
@@ -245,6 +249,7 @@ function Desktop() {
     if (!e.target.closest('.desktop-icon') &&
         !e.target.closest('.window')) {
       setSelectedFileIds([]);
+      setSelectedFiles([], 'desktop');
       window.dispatchEvent(new CustomEvent('desktopSelection', {
         detail: { selectedIds: [], source: 'app' }
       }));

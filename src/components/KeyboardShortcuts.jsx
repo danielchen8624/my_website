@@ -2,17 +2,27 @@ import { useEffect } from 'react';
 import { useFileSystem } from '../context/FileSystemContext';
 
 // Global selection state for keyboard shortcuts
-// This tracks the currently selected file across desktop and explorer
-window.__selectedFileId = null;
+// This tracks the currently selected file(s) across desktop and explorer
+window.__selectedFileIds = [];
 window.__currentFolderId = 'desktop';
 
 export function setSelectedFile(fileId, folderId = 'desktop') {
-  window.__selectedFileId = fileId;
+  // For single selection, replace the array
+  window.__selectedFileIds = fileId ? [fileId] : [];
+  window.__currentFolderId = folderId;
+}
+
+export function setSelectedFiles(fileIds, folderId = 'desktop') {
+  window.__selectedFileIds = fileIds || [];
   window.__currentFolderId = folderId;
 }
 
 export function getSelectedFile() {
-  return window.__selectedFileId;
+  return window.__selectedFileIds[0] || null;
+}
+
+export function getSelectedFiles() {
+  return window.__selectedFileIds;
 }
 
 export function getCurrentFolder() {
@@ -20,7 +30,7 @@ export function getCurrentFolder() {
 }
 
 export default function KeyboardShortcuts() {
-  const { copyFile, cutFile, pasteFile, deleteFile, clipboard, getFile } = useFileSystem();
+  const { copyFile, cutFile, pasteFile, deleteFile, clipboard, getFile, undo, redo } = useFileSystem();
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -32,24 +42,27 @@ export default function KeyboardShortcuts() {
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
       const modKey = isMac ? e.metaKey : e.ctrlKey;
 
-      // Get selected file and check if it's a system file
-      const selectedFile = window.__selectedFileId ? getFile(window.__selectedFileId) : null;
-      const isSystemFile = selectedFile?.type === 'system';
+      // Get selected files and filter out system files
+      const selectedIds = window.__selectedFileIds || [];
+      const nonSystemIds = selectedIds.filter(id => {
+        const file = getFile(id);
+        return file && file.type !== 'system';
+      });
 
       if (modKey) {
         switch (e.key.toLowerCase()) {
           case 'c':
             // Copy (not for system files)
-            if (window.__selectedFileId && !isSystemFile) {
+            if (nonSystemIds.length > 0) {
               e.preventDefault();
-              copyFile(window.__selectedFileId);
+              copyFile(nonSystemIds);
             }
             break;
           case 'x':
             // Cut (not for system files)
-            if (window.__selectedFileId && !isSystemFile) {
+            if (nonSystemIds.length > 0) {
               e.preventDefault();
-              cutFile(window.__selectedFileId);
+              cutFile(nonSystemIds);
             }
             break;
           case 'v':
@@ -59,22 +72,32 @@ export default function KeyboardShortcuts() {
               pasteFile(window.__currentFolderId || 'desktop');
             }
             break;
+          case 'z':
+            // Undo
+            e.preventDefault();
+            undo();
+            break;
+          case 'y':
+            // Redo
+            e.preventDefault();
+            redo();
+            break;
           default:
             break;
         }
       }
 
       // Delete key (not for system files)
-      if (e.key === 'Delete' && window.__selectedFileId && !isSystemFile) {
+      if (e.key === 'Delete' && nonSystemIds.length > 0) {
         e.preventDefault();
-        deleteFile(window.__selectedFileId);
-        window.__selectedFileId = null;
+        nonSystemIds.forEach(id => deleteFile(id));
+        window.__selectedFileIds = [];
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [copyFile, cutFile, pasteFile, deleteFile, clipboard, getFile]);
+  }, [copyFile, cutFile, pasteFile, deleteFile, clipboard, getFile, undo, redo]);
 
   return null; // This component doesn't render anything
 }

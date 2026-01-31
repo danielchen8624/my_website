@@ -53,10 +53,10 @@ export default function ResumeApp() {
           <header className="resume-header">
             <h1>Daniel Chen</h1>
             <div className="contact-info">
-              <span>📞 647-915-4852</span>
-              <span>✉️ <a href="mailto:daniel.chen0113@gmail.com">daniel.chen0113@gmail.com</a></span>
-              <span>💼 <a href="https://www.linkedin.com/in/daniel-chen0113/" target="_blank" rel="noopener noreferrer">daniel-chen0113</a></span>
-              <span>🐙 <a href="https://github.com/danielchen8624" target="_blank" rel="noopener noreferrer">danielchen8624</a></span>
+              <span>[Tel]: 647-915-4852</span>
+              <span>[Mail]: <a href="mailto:daniel.chen0113@gmail.com">daniel.chen0113@gmail.com</a></span>
+              <span>[LinkedIn]: <a href="https://www.linkedin.com/in/daniel-chen0113/" target="_blank" rel="noopener noreferrer">daniel-chen0113</a></span>
+              <span>[GitHub]: <a href="https://github.com/danielchen8624" target="_blank" rel="noopener noreferrer">danielchen8624</a></span>
             </div>
           </header>
 

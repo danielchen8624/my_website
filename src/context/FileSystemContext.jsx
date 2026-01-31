@@ -197,29 +197,58 @@ Feel free to reach out!`,
     type: 'file',
     icon: 'notepad',
     position: { x: 20, y: 610 },
-    content: `--- WELCOME TO RETRO-OS v1.0 ---
+    content: `================================================================
+                 WELCOME TO RETRO-OS v1.0
+================================================================
 
-Welcome to my interactive portfolio!
-This website is a fully simulated Operating System running in your browser.
+Welcome to my interactive portfolio! This website is a fully
+simulated Windows 95/98 styling Operating System running 
+directly in your browser.
 
-KEY FEATURES:
--------------
-1. Start Menu & Taskbar
-   - Use the Start Menu to navigate apps.
-   - Quick Launch icons (next to Start) for instant access.
+[ GETTING STARTED ]
+----------------------------------------------------------------
+* DOUBLE-CLICK icons to open them.
+* RIGHT-CLICK anywhere (Desktop, Files, Taskbar) for context menus.
+* DRAG & DROP files to move them into folders or the Recycle Bin.
 
-2. Interactive Apps
-   - Winamp: Plays real tunes!
-   - Minesweeper: Fully playable clone (try typing 'minesweeper' in Run).
-   - Paint: Draw masterpieces.
-   - Terminal: Supports real commands like 'ls', 'cd', 'mkdir'.
+[ PRO TIPS & HIDDEN FEATURES ]
+----------------------------------------------------------------
+1. KEYBOARD SHORTCUTS
+   [Ctrl]+[C] / [Ctrl]+[V]  : Copy and Paste files or folders
+   [Delete]                 : Delete selected file
+   [Enter]                  : Open selected file
+   [F2]                     : Rename selected file
 
-3. Hidden Secrets
-   - Try right-clicking "My Computer" -> Properties.
-   - Delete files and check the Recycle Bin (it really works!).
-   - Look out for the Blue Screen of Death...
+2. WINDOW MANAGEMENT
+   * Drag windows by their blue title bars to move them.
+   * Resize windows by dragging the edges.
+   * Click the taskbar items to minimize/restore windows.
 
-ENJOY YOUR STAY!
+3. INTERACTIVE APPS
+   * Winamp       : Plays real music! Drag it around.
+   * Paint        : Draw pixel art masterpieces.
+   * Terminal     : A real working shell. Try commands like:
+                     > mkdir "secret folder"
+                     > cd "secret folder"
+                     > echo "hello" > secret.txt
+   * Minesweeper  : The classic game. Don't explode!
+
+4. START -> RUN COMMANDS
+   Open the Start Menu -> Run and try typing:
+   * "minesweeper" -> Launches the game
+   * "cmd"         -> Opens Terminal
+   * "explorer"    -> Opens File Explorer
+   * "www.google.com" -> Launches Web Browser
+
+[ SYSTEM SECRETS ]
+----------------------------------------------------------------
+* Try right-clicking "My Computer" and selecting "Properties" 
+  to see system specs.
+* Deleted files go to the Recycle Bin first. Don't forget to 
+  empty it!
+* Look out for the "Blue Screen of Death"...
+
+Enjoy exploring!
 - Daniel`,
     appType: 'notepad',
   },
@@ -266,6 +295,65 @@ function loadFileSystem() {
 export function FileSystemProvider({ children }) {
   const [files, setFiles] = useState(() => loadFileSystem());
   const [clipboard, setClipboard] = useState(null);
+
+  // Undo/Redo history - stores snapshots of file state
+  const [undoStack, setUndoStack] = useState([]);
+  const [redoStack, setRedoStack] = useState([]);
+  const maxHistorySize = 20;
+
+  // Helper to save current state to undo stack before making changes
+  const saveToUndoStack = useCallback((currentFiles) => {
+    setUndoStack(prev => {
+      const newStack = [...prev, JSON.parse(JSON.stringify(currentFiles))];
+      // Limit stack size
+      if (newStack.length > maxHistorySize) {
+        newStack.shift();
+      }
+      return newStack;
+    });
+    // Clear redo stack when new action is performed
+    setRedoStack([]);
+  }, []);
+
+  // Undo - restore previous state
+  const undo = useCallback(() => {
+    if (undoStack.length === 0) return false;
+
+    setUndoStack(prev => {
+      const newStack = [...prev];
+      const previousState = newStack.pop();
+
+      // Save current state to redo stack
+      setRedoStack(redoPrev => [...redoPrev, JSON.parse(JSON.stringify(files))]);
+
+      // Restore previous state
+      setFiles(previousState);
+
+      return newStack;
+    });
+
+    return true;
+  }, [undoStack, files]);
+
+  // Redo - restore next state
+  const redo = useCallback(() => {
+    if (redoStack.length === 0) return false;
+
+    setRedoStack(prev => {
+      const newStack = [...prev];
+      const nextState = newStack.pop();
+
+      // Save current state to undo stack
+      setUndoStack(undoPrev => [...undoPrev, JSON.parse(JSON.stringify(files))]);
+
+      // Restore next state
+      setFiles(nextState);
+
+      return newStack;
+    });
+
+    return true;
+  }, [redoStack, files]);
 
   // Save to localStorage whenever files change
   useEffect(() => {
@@ -371,6 +459,7 @@ export function FileSystemProvider({ children }) {
 
   // Rename a file (but not system files)
   const renameFile = useCallback((id, newName) => {
+    saveToUndoStack(files);
     setFiles(prev => {
       const file = prev[id];
       // Don't rename system files
@@ -425,7 +514,7 @@ export function FileSystemProvider({ children }) {
         [id]: { ...prev[id], name: finalName }
       };
     });
-  }, []);
+  }, [files, saveToUndoStack]);
 
   // Update file content
   const updateFileContent = useCallback((id, newContent) => {
@@ -475,7 +564,8 @@ export function FileSystemProvider({ children }) {
     const newId = `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     // Destructure to exclude any existing id from the source file
     const { id: _ignoreId, ...fileWithoutId } = file;
-    
+
+    saveToUndoStack(files);
     setFiles(prev => {
       // Calculate unique name using the PREVIOUS state to ensure consistency
       // especially when multiple files are added in quick succession (like paste)
@@ -497,14 +587,13 @@ export function FileSystemProvider({ children }) {
         }
       };
     });
-    
-    return newId;
-  }, []);
-    
 
+    return newId;
+  }, [files, saveToUndoStack]);
 
   // Delete a file (move to recycle bin)
   const deleteFile = useCallback((id, parentId = null) => {
+    saveToUndoStack(files);
     setFiles(prev => {
       const fileToDelete = prev[id];
       // Don't delete system files
@@ -543,8 +632,8 @@ export function FileSystemProvider({ children }) {
         }
       };
     });
-  }, []);
-  
+  }, [files, saveToUndoStack]);
+
   // Check if a file can be copied/cut (not a system file)
   const canModifyFile = useCallback((id) => {
     const file = files[id];
@@ -709,6 +798,7 @@ export function FileSystemProvider({ children }) {
 
   // Move file to a folder (for drag-drop into folder/recycle bin)
   const moveFileToFolder = useCallback((fileId, targetFolderId) => {
+    saveToUndoStack(files);
     setFiles(prev => {
       const file = prev[fileId];
       const targetFolder = prev[targetFolderId];
@@ -752,7 +842,7 @@ export function FileSystemProvider({ children }) {
         }
       };
     });
-  }, []);
+  }, [files, saveToUndoStack]);
 
   // Restore file from recycle bin
   const restoreFile = useCallback((fileId) => {
@@ -852,6 +942,10 @@ export function FileSystemProvider({ children }) {
     restoreFile,
     permanentlyDelete,
     emptyRecycleBin,
+    undo,
+    redo,
+    canUndo: undoStack.length > 0,
+    canRedo: redoStack.length > 0,
   };
 
   return (

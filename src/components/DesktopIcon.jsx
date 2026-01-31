@@ -148,15 +148,17 @@ export default function DesktopIcon({ file, isSelected: isSelectedProp = false }
   const handleMouseDown = useCallback((e) => {
     if (isRenaming) return;
     if (e.button !== 0) return; // Only left click
-    
-    // If not already selected, select this one
-    // But don't immediately clear others if we are about to drag a group.
-    // The safest bet is: if we click an unselected icon, we select it (and others clear via click handler).
-    // If we click a selected icon, we DO NOT clear selection, in case we are about to drag the group.
-    // However, the click handler runs AFTER drag end if no drag occurred.
-    
+
+    // If not already selected, clear others and select only this one
+    // (unless Ctrl is held for multi-select)
     if (!isSelected) {
-       setIsSelectedLocal(true);
+      if (!e.ctrlKey && !e.metaKey) {
+        // Clear other selections
+        window.dispatchEvent(new CustomEvent('desktopSelection', {
+          detail: { selectedIds: [file.id] }
+        }));
+      }
+      setIsSelectedLocal(true);
     }
     
     // Record start position for threshold check
@@ -214,16 +216,28 @@ export default function DesktopIcon({ file, isSelected: isSelectedProp = false }
       
       // Helper to move an element visually
       const moveIconElement = (element) => {
-        // We use style.left/top directly. 
-        // Note: element.style.left might be set from React, so we need consistent units (px)
-        // Parsing current computed style is safer
+        // We use style.left/top directly.
         const rect = element.getBoundingClientRect();
         const currentLeft = rect.left - desktopRect.left;
         const currentTop = rect.top - desktopRect.top;
-        
-        const newLeft = currentLeft + deltaX;
-        const newTop = currentTop + deltaY;
-        
+
+        let newLeft = currentLeft + deltaX;
+        let newTop = currentTop + deltaY;
+
+        // Windows 95 style: allow partial off-screen but keep some visible
+        const iconWidth = 84;
+        const iconHeight = 80;
+        const visibleMargin = 20; // Must keep at least this many pixels visible
+
+        // Left edge: can go negative, but keep visibleMargin on screen
+        newLeft = Math.max(-(iconWidth - visibleMargin), newLeft);
+        // Right edge: can go past, but keep visibleMargin on screen
+        newLeft = Math.min(desktopRect.width - visibleMargin, newLeft);
+        // Top edge: can go negative, but keep visibleMargin on screen
+        newTop = Math.max(-(iconHeight - visibleMargin), newTop);
+        // Bottom edge: can go past, but keep visibleMargin on screen
+        newTop = Math.min(desktopRect.height - visibleMargin, newTop);
+
         element.style.left = `${newLeft}px`;
         element.style.top = `${newTop}px`;
       };
@@ -277,14 +291,18 @@ export default function DesktopIcon({ file, isSelected: isSelectedProp = false }
            const rect = element.getBoundingClientRect();
            const desktop = document.querySelector('.desktop');
            const desktopRect = desktop.getBoundingClientRect();
-           
+
            let x = rect.left - desktopRect.left;
            let y = rect.top - desktopRect.top;
-           
-           // Constrain locally
-           x = Math.max(0, Math.min(x, desktopRect.width - 84));
-           y = Math.max(0, Math.min(y, desktopRect.height - 80));
-           
+
+           // Windows 95 style: allow partial off-screen
+           const iconWidth = 84;
+           const iconHeight = 80;
+           const visibleMargin = 20;
+
+           x = Math.max(-(iconWidth - visibleMargin), Math.min(x, desktopRect.width - visibleMargin));
+           y = Math.max(-(iconHeight - visibleMargin), Math.min(y, desktopRect.height - visibleMargin));
+
            moveFile(id, x, y);
         };
 

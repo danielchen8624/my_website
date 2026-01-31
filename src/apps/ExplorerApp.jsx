@@ -16,7 +16,7 @@ export default function ExplorerApp({ folderId = 'desktop', windowId }) {
     getFolderContents,
     findParent
   } = useFileSystem();
-  
+
   // Current folder ID (can change via navigation)
   const [currentFolderId, setCurrentFolderId] = useState(folderId);
   const [selectedId, setSelectedId] = useState(null);
@@ -26,10 +26,11 @@ export default function ExplorerApp({ folderId = 'desktop', windowId }) {
   const [addressValue, setAddressValue] = useState('');
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [expandedFolders, setExpandedFolders] = useState(['desktop', 'my-computer']);
-  
+  const [sidebarDropTarget, setSidebarDropTarget] = useState(null); // Track which sidebar folder is drop target
+
   const lastClickTimeRef = useRef(0);
   const lastClickIdRef = useRef(null);
-  
+
   const folder = getFile(currentFolderId);
   const files = getFilesInFolder(currentFolderId);
 
@@ -39,7 +40,7 @@ export default function ExplorerApp({ folderId = 'desktop', windowId }) {
       updateWindowTitle(windowId, folder.name);
     }
   }, [windowId, folder, updateWindowTitle]);
-  
+
   // Update address bar when folder changes
   useEffect(() => {
     // Special paths for system folders
@@ -53,10 +54,33 @@ export default function ExplorerApp({ folderId = 'desktop', windowId }) {
     }
   }, [currentFolderId, getFilePath]);
 
+  // Auto-expand sidebar to show current folder
+  const expandToFolder = useCallback((targetFolderId) => {
+    const parentsToExpand = [];
+    let currentId = targetFolderId;
+
+    // Walk up the tree and collect all parent IDs
+    while (currentId) {
+      parentsToExpand.push(currentId);
+      const parent = findParent(currentId);
+      if (parent) {
+        currentId = parent.id;
+      } else {
+        break;
+      }
+    }
+
+    // Add all parents to expanded folders
+    setExpandedFolders(prev => {
+      const newExpanded = new Set([...prev, ...parentsToExpand]);
+      return Array.from(newExpanded);
+    });
+  }, [findParent]);
+
   // Navigation history for back button
   const [history, setHistory] = useState([folderId]);
   const [historyIndex, setHistoryIndex] = useState(0);
-  
+
   // Listen for rename events
   useEffect(() => {
     const handleStartRename = (e) => {
@@ -69,7 +93,7 @@ export default function ExplorerApp({ folderId = 'desktop', windowId }) {
         setRenameValue(file?.name || '');
       }
     };
-    
+
     window.addEventListener('startRename', handleStartRename);
     return () => window.removeEventListener('startRename', handleStartRename);
   }, [files, getFile]);
@@ -78,31 +102,40 @@ export default function ExplorerApp({ folderId = 'desktop', windowId }) {
   const navigateTo = useCallback((targetFolderId) => {
     setCurrentFolderId(targetFolderId);
     setSelectedId(null);
-    
+
+    // Auto-expand sidebar to show this folder
+    expandToFolder(targetFolderId);
+
     // Add to history
     const newHistory = history.slice(0, historyIndex + 1);
     newHistory.push(targetFolderId);
     setHistory(newHistory);
     setHistoryIndex(newHistory.length - 1);
-  }, [history, historyIndex]);
+  }, [history, historyIndex, expandToFolder]);
 
   // Go back in history
   const goBack = useCallback(() => {
     if (historyIndex > 0) {
-      setHistoryIndex(historyIndex - 1);
-      setCurrentFolderId(history[historyIndex - 1]);
+      const newIndex = historyIndex - 1;
+      const newFolderId = history[newIndex];
+      setHistoryIndex(newIndex);
+      setCurrentFolderId(newFolderId);
       setSelectedId(null);
+      expandToFolder(newFolderId);
     }
-  }, [historyIndex, history]);
+  }, [historyIndex, history, expandToFolder]);
 
   // Go forward in history
   const goForward = useCallback(() => {
     if (historyIndex < history.length - 1) {
-      setHistoryIndex(historyIndex + 1);
-      setCurrentFolderId(history[historyIndex + 1]);
+      const newIndex = historyIndex + 1;
+      const newFolderId = history[newIndex];
+      setHistoryIndex(newIndex);
+      setCurrentFolderId(newFolderId);
       setSelectedId(null);
+      expandToFolder(newFolderId);
     }
-  }, [historyIndex, history]);
+  }, [historyIndex, history, expandToFolder]);
 
   // Go up to parent folder
   const goUp = useCallback(() => {
@@ -147,11 +180,11 @@ export default function ExplorerApp({ folderId = 'desktop', windowId }) {
   // Handle single click to select, slow double-click to rename
   const handleClick = useCallback((file, e) => {
     e.stopPropagation();
-    
+
     const now = Date.now();
     const timeSinceLastClick = now - lastClickTimeRef.current;
     const sameFile = lastClickIdRef.current === file.id;
-    
+
     if (selectedId === file.id && sameFile && timeSinceLastClick > 500 && timeSinceLastClick < 1500) {
       // Slow double-click - start renaming (but not for system files)
       if (file.type !== 'system' && file.type !== 'drive') {
@@ -162,7 +195,7 @@ export default function ExplorerApp({ folderId = 'desktop', windowId }) {
       setSelectedId(file.id);
       setSelectedFile(file.id, currentFolderId);
     }
-    
+
     lastClickTimeRef.current = now;
     lastClickIdRef.current = file.id;
   }, [selectedId, currentFolderId]);
@@ -219,7 +252,7 @@ export default function ExplorerApp({ folderId = 'desktop', windowId }) {
     }
   }, [isRenaming, handleRenameSubmit]);
 
-  // Drag and Drop handlers
+  // Drag and Drop handlers for main grid
   const handleDragOver = useCallback((e) => {
     e.preventDefault();
     setIsDropTarget(true);
@@ -249,44 +282,143 @@ export default function ExplorerApp({ folderId = 'desktop', windowId }) {
 
   const handleItemDragEnd = useCallback(() => {
     window.__draggingFileId = null;
+    setSidebarDropTarget(null);
   }, []);
+
+  // Sidebar drag handlers
+  const handleSidebarDragOver = useCallback((e, folderId) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const draggedFileId = window.__draggingFileId;
+    // Don't allow dropping on itself or its children
+    if (draggedFileId && draggedFileId !== folderId) {
+      setSidebarDropTarget(folderId);
+    }
+  }, []);
+
+  const handleSidebarDragLeave = useCallback((e) => {
+    e.stopPropagation();
+    // Only clear if we're actually leaving (not entering a child)
+    const relatedTarget = e.relatedTarget;
+    if (!relatedTarget || !e.currentTarget.contains(relatedTarget)) {
+      setSidebarDropTarget(null);
+    }
+  }, []);
+
+  const handleSidebarDrop = useCallback((e, targetFolderId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSidebarDropTarget(null);
+
+    const draggedFileId = window.__draggingFileId;
+    if (draggedFileId && draggedFileId !== targetFolderId) {
+      moveFileToFolder(draggedFileId, targetFolderId);
+    }
+    window.__draggingFileId = null;
+  }, [moveFileToFolder]);
 
   // Handle mouseup for desktop icon drops (they use custom drag, not HTML5)
   useEffect(() => {
     const handleMouseUp = (e) => {
       const draggedFileId = window.__draggingFileId;
       if (!draggedFileId) return;
-      
-      // Check if mouse is over this explorer window
+
+      // Check if mouse is over this explorer window's main grid
       const explorerEl = document.querySelector(`[data-folder-id="${currentFolderId}"]`);
-      if (!explorerEl) return;
-      
-      const rect = explorerEl.getBoundingClientRect();
-      if (
-        e.clientX >= rect.left &&
-        e.clientX <= rect.right &&
-        e.clientY >= rect.top &&
-        e.clientY <= rect.bottom
-      ) {
-        // Dropped inside this explorer!
-        if (draggedFileId !== currentFolderId) {
-          moveFileToFolder(draggedFileId, currentFolderId);
-          window.__draggingFileId = null;
+      if (explorerEl) {
+        const rect = explorerEl.getBoundingClientRect();
+        if (
+          e.clientX >= rect.left &&
+          e.clientX <= rect.right &&
+          e.clientY >= rect.top &&
+          e.clientY <= rect.bottom
+        ) {
+          // Dropped inside this explorer's main grid!
+          if (draggedFileId !== currentFolderId) {
+            moveFileToFolder(draggedFileId, currentFolderId);
+            window.__draggingFileId = null;
+            return;
+          }
+        }
+      }
+
+      // Check if mouse is over any sidebar folder
+      const sidebarFolders = document.querySelectorAll('.sidebar-folder[data-sidebar-folder-id]');
+      for (const folderEl of sidebarFolders) {
+        const rect = folderEl.getBoundingClientRect();
+        if (
+          e.clientX >= rect.left &&
+          e.clientX <= rect.right &&
+          e.clientY >= rect.top &&
+          e.clientY <= rect.bottom
+        ) {
+          const targetId = folderEl.dataset.sidebarFolderId;
+          if (targetId && draggedFileId !== targetId) {
+            moveFileToFolder(draggedFileId, targetId);
+            window.__draggingFileId = null;
+            return;
+          }
         }
       }
     };
-    
+
+    // Track mouse move for sidebar highlight during custom drag
+    const handleMouseMove = (e) => {
+      const draggedFileId = window.__draggingFileId;
+      if (!draggedFileId) {
+        setSidebarDropTarget(null);
+        return;
+      }
+
+      // Check sidebar folders
+      const sidebarFolders = document.querySelectorAll('.sidebar-folder[data-sidebar-folder-id]');
+      let foundTarget = null;
+
+      for (const folderEl of sidebarFolders) {
+        const rect = folderEl.getBoundingClientRect();
+        if (
+          e.clientX >= rect.left &&
+          e.clientX <= rect.right &&
+          e.clientY >= rect.top &&
+          e.clientY <= rect.bottom
+        ) {
+          const targetId = folderEl.dataset.sidebarFolderId;
+          if (targetId && draggedFileId !== targetId) {
+            foundTarget = targetId;
+            break;
+          }
+        }
+      }
+
+      setSidebarDropTarget(foundTarget);
+    };
+
     document.addEventListener('mouseup', handleMouseUp);
-    return () => document.removeEventListener('mouseup', handleMouseUp);
+    document.addEventListener('mousemove', handleMouseMove);
+    return () => {
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mousemove', handleMouseMove);
+    };
   }, [currentFolderId, moveFileToFolder]);
 
   // Toggle folder expansion in sidebar
   const toggleFolderExpansion = useCallback((folderId) => {
-    setExpandedFolders(prev => 
-      prev.includes(folderId) 
+    setExpandedFolders(prev =>
+      prev.includes(folderId)
         ? prev.filter(id => id !== folderId)
         : [...prev, folderId]
     );
+  }, []);
+
+  // Handle sidebar folder context menu
+  const handleSidebarContextMenu = useCallback((e, folderId) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // The ContextMenu component listens to contextmenu events on document
+    // We need to let it know this is a sidebar folder by using data attributes
+    // The native event will bubble up and ContextMenu will handle it
   }, []);
 
   // Render folder tree recursively for sidebar
@@ -301,6 +433,7 @@ export default function ExplorerApp({ folderId = 'desktop', windowId }) {
 
     const isExpanded = expandedFolders.includes(parentId);
     const isCurrentFolder = parentId === currentFolderId;
+    const isDropTargetFolder = sidebarDropTarget === parentId;
 
     // Resolve icon
     let iconKey = folder.icon;
@@ -308,12 +441,23 @@ export default function ExplorerApp({ folderId = 'desktop', windowId }) {
       iconKey = (folder.children && folder.children.length > 0) ? 'recycle-bin-full' : 'recycle-bin-empty';
     }
 
+    // Determine if this folder can receive drops (not system, has children capability)
+    const canReceiveDrop = folder.type === 'folder' ||
+                          folder.type === 'system-folder' ||
+                          parentId === 'recycle-bin' ||
+                          parentId === 'desktop';
+
     return (
       <div key={parentId}>
         <div
-          className={`sidebar-folder ${isCurrentFolder ? 'active' : ''}`}
+          className={`sidebar-folder ${isCurrentFolder ? 'active' : ''} ${isDropTargetFolder ? 'drop-target' : ''}`}
           style={{ paddingLeft: `${depth * 18 + 4}px` }}
+          data-sidebar-folder-id={canReceiveDrop ? parentId : undefined}
+          data-file-id={parentId}
           onClick={() => navigateTo(parentId)}
+          onDragOver={canReceiveDrop ? (e) => handleSidebarDragOver(e, parentId) : undefined}
+          onDragLeave={canReceiveDrop ? handleSidebarDragLeave : undefined}
+          onDrop={canReceiveDrop ? (e) => handleSidebarDrop(e, parentId) : undefined}
         >
           {childFolders.length > 0 && (
             <span
@@ -327,38 +471,38 @@ export default function ExplorerApp({ folderId = 'desktop', windowId }) {
           <span className="folder-icon"><Icon icon={iconKey} size={16} /></span>
           <span className="folder-name">{folder.name}</span>
         </div>
-        
+
         {/* Render children only if expanded */}
         {isExpanded && childFolders.map(child => (
              renderFolderTree(child.id, depth + 1)
         ))}
       </div>
     );
-  }, [getFile, expandedFolders, currentFolderId, navigateTo, toggleFolderExpansion]);
+  }, [getFile, expandedFolders, currentFolderId, sidebarDropTarget, navigateTo, toggleFolderExpansion, handleSidebarDragOver, handleSidebarDragLeave, handleSidebarDrop]);
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Toolbar */}
       <div className="explorer-toolbar">
-        <button 
-          className="explorer-toolbar-btn" 
-          onClick={goBack} 
+        <button
+          className="explorer-toolbar-btn"
+          onClick={goBack}
           disabled={historyIndex === 0}
           title="Back"
         >
           <Icon icon="directory_open" size={16} style={{transform: 'scaleX(-1)'}} /> Back
         </button>
-        <button 
-          className="explorer-toolbar-btn" 
-          onClick={goForward} 
+        <button
+          className="explorer-toolbar-btn"
+          onClick={goForward}
           disabled={historyIndex >= history.length - 1}
           title="Forward"
         >
            Next <Icon icon="directory_open" size={16} />
         </button>
         <div className="vertical-separator" />
-        <button 
-          className="explorer-toolbar-btn" 
+        <button
+          className="explorer-toolbar-btn"
           onClick={goUp}
           disabled={currentFolderId === 'desktop'}
           title="Up One Level"
@@ -372,9 +516,9 @@ export default function ExplorerApp({ folderId = 'desktop', windowId }) {
         <span>Address:</span>
         <div style={{ flex: 1, display: 'flex', border: '1px solid #7f9db9', background: 'white' }}>
             <div style={{ padding: '2px' }}><Icon icon="folder" size={16} /></div>
-            <input 
-              className="explorer-address-input" 
-              value={addressValue} 
+            <input
+              className="explorer-address-input"
+              value={addressValue}
               onChange={(e) => setAddressValue(e.target.value)}
               onFocus={() => setIsEditingAddress(true)}
               onBlur={handleAddressSubmit}
@@ -396,19 +540,11 @@ export default function ExplorerApp({ folderId = 'desktop', windowId }) {
         </div>
 
         {/* File Grid */}
-        <div 
-          className={`explorer-content-area`} 
+        <div
+          className={`explorer-content-area`}
           style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
         >
-            {/* Header row hidden for icon view 
-            <div className="explorer-header-row">
-                <div style={{width: '200px'}}>Name</div>
-                <div style={{width: '100px'}}>Size</div>
-                <div style={{flex: 1}}>Type</div>
-            </div>
-            */}
-            
-            <div 
+            <div
               className={`explorer-grid ${isDropTarget ? 'drop-target' : ''}`}
               style={{ flex: 1, overflowY: 'auto' }}
               data-folder-id={currentFolderId}
