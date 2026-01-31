@@ -41,7 +41,7 @@ const ICON_MAP = {
   'shutdown': 'shut_down_cool-4.png',
   'reset': 'msg_warning-0.png', // Correct Warning Icon
   'display': 'display_properties-4.png',
-  'program': 'directory_program_group_small-4.png', // Correct Programs Icon
+  'programs': 'directory_program_group_small-4.png', // Correct Programs Icon (Start Menu)
 };
 
 export default function Icon({ icon, size = 32, className = '', ...props }) {

@@ -9,42 +9,51 @@
    CSS VARIABLES - THE 95 PALETTE
    ============================================ */
 :root {
-  /* Core Colors */
-  --desktop-bg: #008080;
+  /* Theme Colors (can be overridden by Display Properties) */
+  --title-bar-active: #000080;
+  --title-bar-inactive: #808080;
+  --title-text-active: #ffffff;
+  --title-text-inactive: #c0c0c0;
   --window-bg: #c0c0c0;
-  --window-header-active: linear-gradient(90deg, #000080, #1084d0);
-  --window-header-inactive: linear-gradient(90deg, #808080, #b0b0b0);
-  --window-header-text-active: #ffffff;
-  --window-header-text-inactive: #c0c0c0;
-  
-  /* Bevel Colors */
-  --bevel-light: #ffffff;
-  --bevel-dark: #808080;
-  --bevel-darker: #404040;
-  
-  /* Button Colors */
   --button-face: #c0c0c0;
-  --button-text: #000000;
   --button-highlight: #ffffff;
   --button-shadow: #808080;
+
+  /* Core Colors */
+  --desktop-bg: #008080;
+  --window-header-active: linear-gradient(90deg, var(--title-bar-active), #1084d0);
+  --window-header-inactive: linear-gradient(90deg, var(--title-bar-inactive), #b0b0b0);
+  --window-header-text-active: var(--title-text-active);
+  --window-header-text-inactive: var(--title-text-inactive);
+
+  /* Bevel Colors */
+  --bevel-light: var(--button-highlight);
+  --bevel-dark: var(--button-shadow);
+  --bevel-darker: #404040;
+
+  /* Button Colors */
+  --button-text: #000000;
   --button-dark-shadow: #404040;
-  
+
   /* Taskbar */
-  --taskbar-bg: #c0c0c0;
-  --start-button-bg: #c0c0c0;
-  
+  --taskbar-bg: var(--button-face);
+  --start-button-bg: var(--button-face);
+
   /* Typography */
   --font-system: 'Segoe UI', 'MS Sans Serif', Tahoma, sans-serif;
   --font-pixel: 'VT323', monospace;
   --font-size-base: 12px;
   --font-size-title: 11px;
   --font-size-icon: 11px;
-  
+
   /* Spacing */
   --window-padding: 3px;
   --header-height: 22px;
   --taskbar-height: 32px;
   --icon-size: 32px;
+
+  /* Selection/Accent Color */
+  --accent-color: var(--title-bar-active);
 }
 
 /* ============================================
@@ -2181,4 +2190,91 @@ body {
 
 .ie-open-browser-btn {
   margin-top: 12px;
+}
+
+/* ============================================
+   SCREENSAVER STYLES
+   ============================================ */
+
+.screensaver-overlay {
+  background: #000;
+}
+
+/* Screensaver preview animations */
+@keyframes twinkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes matrixFall {
+  0% { transform: translateY(-100%); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(100%); opacity: 0; }
+}
+
+.ss-starfield {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.ss-matrix {
+  line-height: 1.2;
+}
+
+/* Display Properties screensaver preview */
+.display-props-monitor.screensaver-preview {
+  overflow: hidden;
+  position: relative;
+}
+
+/* ============================================
+   THEME-AWARE OVERRIDES
+   ============================================ */
+
+/* Use accent color for selections and highlights */
+.desktop-icon.selected,
+.desktop-icon.selected .desktop-icon-label,
+.explorer-item.selected,
+.sidebar-folder.active,
+.context-menu-item:hover,
+.window-menu-item:hover,
+.window-menu-item.active,
+.window-menu-dropdown-item:hover,
+.start-menu-item:hover,
+.display-props-list-item.selected,
+.winamp-playlist-item.active,
+.winamp-playlist-header,
+.paint-menu-item:hover,
+.paint-menu-dropdown div:hover {
+  background-color: var(--title-bar-active);
+  color: var(--title-text-active);
+}
+
+/* Drop targets */
+.desktop-icon.drop-target {
+  background-color: rgba(0, 0, 128, 0.5);
+  border: 2px dashed var(--title-bar-active);
+}
+
+.explorer-grid.drop-target,
+.sidebar-folder.drop-target {
+  background-color: rgba(0, 0, 128, 0.1);
+  outline: 2px dashed var(--title-bar-active);
+}
+
+/* Paint color active outline */
+.paint-color.active {
+  outline: 2px solid var(--title-bar-active);
+}
+
+/* Explorer rename input */
+.explorer-rename-input {
+  border: 1px solid var(--title-bar-active);
+}
+
+/* Start menu sidebar gradient */
+.start-menu-sidebar {
+  background: linear-gradient(to top, var(--title-bar-active), #1084d0);
 }

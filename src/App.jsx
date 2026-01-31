@@ -11,6 +11,7 @@ import BiosBoot from './components/BiosBoot';
 import SplashScreen from './components/SplashScreen';
 import BSOD from './components/BSOD';
 import RunDialog from './components/RunDialog';
+import ScreenSaver from './components/ScreenSaver';
 
 // App Components
 import NotepadApp from './apps/NotepadApp';
@@ -80,6 +81,48 @@ function Desktop() {
   const justFinishedSelectingRef = useRef(false); // Prevent click from clearing selection
   const selectionStartRef = useRef({ x: 0, y: 0 });
   const selectionCurrentRef = useRef({ x: 0, y: 0 });
+
+  // Screensaver state
+  const [screensaverType, setScreensaverType] = useState(() =>
+    localStorage.getItem('retroos-screensaver') || 'none'
+  );
+  const [screensaverWait, setScreensaverWait] = useState(() =>
+    parseInt(localStorage.getItem('retroos-screensaver-wait') || '5', 10)
+  );
+  const [screensaverPreview, setScreensaverPreview] = useState(null);
+
+  // Listen for screensaver settings changes
+  useEffect(() => {
+    const handleSettingsChange = (e) => {
+      setScreensaverType(e.detail.type);
+      setScreensaverWait(e.detail.waitMinutes);
+    };
+
+    const handlePreview = (e) => {
+      setScreensaverPreview(e.detail.type);
+      // Auto-dismiss preview after 5 seconds or on any activity
+      setTimeout(() => setScreensaverPreview(null), 5000);
+    };
+
+    window.addEventListener('screensaverSettingsChanged', handleSettingsChange);
+    window.addEventListener('screensaverPreview', handlePreview);
+
+    return () => {
+      window.removeEventListener('screensaverSettingsChanged', handleSettingsChange);
+      window.removeEventListener('screensaverPreview', handlePreview);
+    };
+  }, []);
+
+  // Dismiss preview on any activity
+  useEffect(() => {
+    if (!screensaverPreview) return;
+
+    const dismiss = () => setScreensaverPreview(null);
+    const events = ['mousedown', 'keydown', 'touchstart'];
+    events.forEach(e => document.addEventListener(e, dismiss));
+
+    return () => events.forEach(e => document.removeEventListener(e, dismiss));
+  }, [screensaverPreview]);
 
   // Store selected file IDs globally for multi-icon dragging
   useEffect(() => {
@@ -256,9 +299,15 @@ function Desktop() {
     }
   };
 
-  // Apply saved wallpaper on load
+  // Apply saved wallpaper or theme desktop color on load
   useEffect(() => {
     const savedWallpaper = localStorage.getItem('retroos-wallpaper');
+    const savedDesktopColor = localStorage.getItem('retroos-desktop-color');
+    const desktop = document.querySelector('.desktop');
+
+    if (!desktop) return;
+
+    // First check for explicit wallpaper selection
     if (savedWallpaper) {
       const WALLPAPERS = {
         'teal': '#008080',
@@ -270,10 +319,15 @@ function Desktop() {
         'clouds': 'linear-gradient(180deg, #87ceeb 0%, #e0f6ff 100%)',
         'sunset': 'linear-gradient(180deg, #ff7e5f 0%, #feb47b 100%)',
       };
-      const desktop = document.querySelector('.desktop');
-      if (desktop && WALLPAPERS[savedWallpaper]) {
+      if (WALLPAPERS[savedWallpaper]) {
         desktop.style.background = WALLPAPERS[savedWallpaper];
+        return;
       }
+    }
+
+    // Fall back to theme desktop color if no wallpaper
+    if (savedDesktopColor) {
+      desktop.style.background = savedDesktopColor;
     }
   }, []);
 
@@ -383,6 +437,13 @@ function Desktop() {
 
       {/* Start Menu */}
       <StartMenu />
+
+      {/* Screensaver */}
+      <ScreenSaver
+        type={screensaverPreview || screensaverType}
+        waitMinutes={screensaverPreview ? 0 : screensaverWait}
+        enabled={screensaverType !== 'none' || screensaverPreview !== null}
+      />
     </div>
   );
 }

@@ -87,7 +87,7 @@ export default function StartMenu() {
   };
 
   const menuItems = [
-    { id: 'programs', label: 'Programs', icon: 'program', action: 'programs', hasSubmenu: true },
+    { id: 'programs', label: 'Programs', icon: 'programs', action: 'programs', hasSubmenu: true },
     { id: 'documents', label: 'Documents', icon: 'folder', action: 'documents' },
     { type: 'divider' },
     { id: 'internet', label: 'Internet Explorer', icon: 'internet-explorer', action: 'internet' },

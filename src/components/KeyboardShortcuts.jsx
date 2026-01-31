@@ -35,12 +35,12 @@ export default function KeyboardShortcuts() {
   useEffect(() => {
     const handleKeyDown = (e) => {
       // Don't intercept if typing in an input field
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
         return;
       }
 
-      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-      const modKey = isMac ? e.metaKey : e.ctrlKey;
+      // Support both Ctrl and Cmd for cross-platform compatibility
+      const modKey = e.ctrlKey || e.metaKey;
 
       // Get selected files and filter out system files
       const selectedIds = window.__selectedFileIds || [];
@@ -50,40 +50,33 @@ export default function KeyboardShortcuts() {
       });
 
       if (modKey) {
-        switch (e.key.toLowerCase()) {
-          case 'c':
-            // Copy (not for system files)
-            if (nonSystemIds.length > 0) {
-              e.preventDefault();
-              copyFile(nonSystemIds);
-            }
-            break;
-          case 'x':
-            // Cut (not for system files)
-            if (nonSystemIds.length > 0) {
-              e.preventDefault();
-              cutFile(nonSystemIds);
-            }
-            break;
-          case 'v':
-            // Paste
-            if (clipboard) {
-              e.preventDefault();
-              pasteFile(window.__currentFolderId || 'desktop');
-            }
-            break;
-          case 'z':
-            // Undo
-            e.preventDefault();
-            undo();
-            break;
-          case 'y':
-            // Redo
-            e.preventDefault();
-            redo();
-            break;
-          default:
-            break;
+        const key = e.key.toLowerCase();
+
+        if (key === 'c' && nonSystemIds.length > 0) {
+          // Copy (not for system files)
+          e.preventDefault();
+          e.stopPropagation();
+          copyFile(nonSystemIds);
+        } else if (key === 'x' && nonSystemIds.length > 0) {
+          // Cut (not for system files)
+          e.preventDefault();
+          e.stopPropagation();
+          cutFile(nonSystemIds);
+        } else if (key === 'v' && clipboard) {
+          // Paste
+          e.preventDefault();
+          e.stopPropagation();
+          pasteFile(window.__currentFolderId || 'desktop');
+        } else if (key === 'z') {
+          // Undo
+          e.preventDefault();
+          e.stopPropagation();
+          undo();
+        } else if (key === 'y') {
+          // Redo
+          e.preventDefault();
+          e.stopPropagation();
+          redo();
         }
       }
 
@@ -95,8 +88,9 @@ export default function KeyboardShortcuts() {
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    // Use capture phase to catch events before other handlers
+    document.addEventListener('keydown', handleKeyDown, true);
+    return () => document.removeEventListener('keydown', handleKeyDown, true);
   }, [copyFile, cutFile, pasteFile, deleteFile, clipboard, getFile, undo, redo]);
 
   return null; // This component doesn't render anything
