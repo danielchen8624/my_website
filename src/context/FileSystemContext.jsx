@@ -1043,12 +1043,12 @@ export function FileSystemProvider({ children }) {
     setFiles(prev => {
       const file = prev[fileId];
       const targetFolder = prev[targetFolderId];
-      
+
       if (!file || !targetFolder) return prev;
-      
+
       // Don't move into itself
       if (fileId === targetFolderId) return prev;
-      
+
       // Find current parent
       let currentParentId = null;
       for (const [key, f] of Object.entries(prev)) {
@@ -1057,13 +1057,25 @@ export function FileSystemProvider({ children }) {
           break;
         }
       }
-      
+
       if (!currentParentId || currentParentId === targetFolderId) return prev;
-      
+
       const currentParent = prev[currentParentId];
-      
+
       // Ensure unique name in target folder
       const uniqueName = calculateUniqueName(prev, targetFolderId, file.name, fileId);
+
+      // If moving to recycle bin, save original location for restore
+      const isMovingToRecycleBin = targetFolderId === 'recycle-bin';
+      const fileUpdate = {
+        ...file,
+        name: uniqueName,
+        position: targetFolderId === 'desktop' ? file.position : undefined,
+        ...(isMovingToRecycleBin && {
+          originalParentId: currentParentId,
+          originalPosition: file.position || { x: 20, y: 20 }
+        })
+      };
 
       return {
         ...prev,
@@ -1075,12 +1087,7 @@ export function FileSystemProvider({ children }) {
           ...targetFolder,
           children: [...(targetFolder.children || []), fileId]
         },
-        [fileId]: {
-          ...file,
-          name: uniqueName, // Update name if needed
-          // Reset position when moving to folder
-          position: targetFolderId === 'desktop' ? file.position : undefined
-        }
+        [fileId]: fileUpdate
       };
     });
   }, [files, saveToUndoStack]);
