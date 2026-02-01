@@ -7,13 +7,13 @@ const COLORS = [
 ];
 
 const TOOLS = [
-  { id: 'pencil', icon: '✏️', name: 'Pencil' },
-  { id: 'brush', icon: '🖌️', name: 'Brush' },
-  { id: 'eraser', icon: '🧽', name: 'Eraser' },
-  { id: 'fill', icon: '🪣', name: 'Fill' },
-  { id: 'line', icon: '📏', name: 'Line' },
-  { id: 'rect', icon: '⬜', name: 'Rectangle' },
-  { id: 'circle', icon: '⭕', name: 'Circle' },
+  { id: 'pencil', icon: '/', name: 'Pencil' },
+  { id: 'brush', icon: '~', name: 'Brush' },
+  { id: 'eraser', icon: '#', name: 'Eraser' },
+  { id: 'fill', icon: '%', name: 'Fill' },
+  { id: 'line', icon: '\\', name: 'Line' },
+  { id: 'rect', icon: '[]', name: 'Rectangle' },
+  { id: 'circle', icon: 'O', name: 'Circle' },
 ];
 
 export default function PaintApp() {
@@ -104,13 +104,13 @@ export default function PaintApp() {
     addFile({
       name: `${fileName}.png`,
       type: 'file',
-      icon: '🖼️',
+      icon: 'notepad',
       position: { x: 150 + Math.random() * 50, y: 150 + Math.random() * 50 },
       content: dataUrl,
       appType: 'image',
     });
     
-    alert(`✅ "${fileName}.png" saved to Desktop!`);
+    alert(`"${fileName}.png" saved to Desktop!`);
   };
 
   // Save as real file

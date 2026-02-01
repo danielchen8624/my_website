@@ -77,8 +77,7 @@ export default function StartMenu() {
         handleReset();
         return; // Don't close start menu immediately (reload will happen)
       case 'shutdown':
-           // Just a visual action for now, or maybe show an alert
-           alert('It is now safe to turn off your computer.');
+           window.close();
            break;
       default:
         break;
@@ -109,7 +108,7 @@ export default function StartMenu() {
   ];
 
   const handleReset = () => {
-    if (confirm('⚠️ WARNING: This will reset all files, settings, and changes to default.\n\nAre you sure you want to continue?')) {
+    if (confirm('WARNING: This will reset all files, settings, and changes to default.\n\nAre you sure you want to continue?')) {
       // Remove ALL localStorage keys that start with 'retro' to ensure complete wipe
       const keysToRemove = [];
       for (let i = 0; i < localStorage.length; i++) {

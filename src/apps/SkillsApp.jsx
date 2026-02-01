@@ -1,17 +1,14 @@
 const skills = [
   {
     category: 'Languages',
-    icon: '',
     items: ['Python', 'Java', 'C', 'C++', 'JavaScript', 'TypeScript', 'SQL', 'HTML/CSS'],
   },
   {
     category: 'Tools/Frameworks',
-    icon: '',
     items: ['React.js', 'Next.js', 'React Native', 'Expo', 'Node.js', 'Express', 'FastAPI', 'PyTorch', 'Flask', 'Tailwind', 'NativeWind', 'Vite', 'Git', 'Vercel'],
   },
   {
     category: 'Cloud/Databases',
-    icon: '',
     items: ['PostgreSQL', 'MySQL', 'Firebase', 'SQLite', 'SQLAlchemy', 'AWS', 'Google Cloud'],
   },
 ];
@@ -19,25 +16,22 @@ const skills = [
 export default function SkillsApp() {
   return (
     <div style={{ padding: '8px' }}>
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: '8px',
+      <div style={{
         marginBottom: '16px',
         paddingBottom: '8px',
-        borderBottom: '2px solid #808080'
+        borderBottom: '2px solid #808080',
+        fontWeight: 'bold'
       }}>
-        <span style={{ fontSize: '24px' }}></span>
-        <span style={{ fontWeight: 'bold' }}>My Computer - Skills & Technologies</span>
+        My Computer - Skills & Technologies
       </div>
 
-      <div style={{ 
-        display: 'grid', 
+      <div style={{
+        display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
         gap: '16px'
       }}>
         {skills.map((skillGroup) => (
-          <div 
+          <div
             key={skillGroup.category}
             style={{
               padding: '12px',
@@ -46,15 +40,11 @@ export default function SkillsApp() {
               borderColor: '#808080 #ffffff #ffffff #808080',
             }}
           >
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '8px',
+            <div style={{
               marginBottom: '8px',
               fontWeight: 'bold'
             }}>
-              <span>{skillGroup.icon}</span>
-              <span>{skillGroup.category}</span>
+              {skillGroup.category}
             </div>
             
             <ul style={{ 

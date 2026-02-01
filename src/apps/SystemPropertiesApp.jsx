@@ -49,7 +49,7 @@ export default function SystemPropertiesApp() {
           <div>
             {/* System Info */}
             <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
-              <div style={{ fontSize: '48px' }}>💻</div>
+              <div style={{ fontSize: '48px' }}>[PC]</div>
               <div>
                 <div style={{ fontWeight: 'bold', fontSize: '14px' }}>System:</div>
                 <div style={{ marginLeft: '10px' }}>
@@ -75,7 +75,7 @@ export default function SystemPropertiesApp() {
 
             {/* Computer Info */}
             <div style={{ display: 'flex', gap: '20px' }}>
-              <div style={{ fontSize: '32px' }}>🖥️</div>
+              <div style={{ fontSize: '32px' }}>[CPU]</div>
               <div>
                 <div style={{ fontWeight: 'bold' }}>Computer:</div>
                 <div style={{ marginLeft: '10px' }}>
@@ -91,21 +91,21 @@ export default function SystemPropertiesApp() {
         {activeTab === 'device' && (
           <div>
             <div style={{ fontWeight: 'bold', marginBottom: '10px' }}>
-              📁 Computer
+              [-] Computer
             </div>
             <div style={{ marginLeft: '20px' }}>
-              <div>📁 CD-ROM</div>
-              <div style={{ marginLeft: '20px' }}>💿 ATAPI CD-ROM Drive</div>
-              <div>📁 Disk drives</div>
-              <div style={{ marginLeft: '20px' }}>💾 WDC AC22100H</div>
-              <div>📁 Display adapters</div>
-              <div style={{ marginLeft: '20px' }}>🖥️ S3 Trio64V+ (generic)</div>
-              <div>📁 Keyboard</div>
-              <div style={{ marginLeft: '20px' }}>⌨️ Standard 101/102-Key</div>
-              <div>📁 Mouse</div>
-              <div style={{ marginLeft: '20px' }}>🖱️ Microsoft PS/2 Mouse</div>
-              <div>📁 Sound, video and game controllers</div>
-              <div style={{ marginLeft: '20px' }}>🔊 Sound Blaster 16</div>
+              <div>[-] CD-ROM</div>
+              <div style={{ marginLeft: '20px' }}>    ATAPI CD-ROM Drive</div>
+              <div>[-] Disk drives</div>
+              <div style={{ marginLeft: '20px' }}>    WDC AC22100H</div>
+              <div>[-] Display adapters</div>
+              <div style={{ marginLeft: '20px' }}>    S3 Trio64V+ (generic)</div>
+              <div>[-] Keyboard</div>
+              <div style={{ marginLeft: '20px' }}>    Standard 101/102-Key</div>
+              <div>[-] Mouse</div>
+              <div style={{ marginLeft: '20px' }}>    Microsoft PS/2 Mouse</div>
+              <div>[-] Sound, video and game controllers</div>
+              <div style={{ marginLeft: '20px' }}>    Sound Blaster 16</div>
             </div>
           </div>
         )}

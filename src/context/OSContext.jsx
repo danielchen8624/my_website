@@ -52,7 +52,7 @@ export function OSProvider({ children }) {
       const newWindow = {
         id: windowId,
         title: fileData?.name || windowId,
-        icon: fileData?.icon || '📄',
+        icon: fileData?.icon || 'notepad',
         appType: appType,
         fileId: fileData?.id || windowId,
         isMinimized: false,

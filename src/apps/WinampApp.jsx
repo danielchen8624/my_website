@@ -240,22 +240,22 @@ export default function WinampApp() {
       {/* Controls */}
       <div className="winamp-controls">
         <button className="winamp-btn" onClick={previousTrack} title="Previous">
-          ⏮️
+          |&lt;
         </button>
         <button className="winamp-btn winamp-btn-play" onClick={togglePlay} title={isPlaying ? 'Pause' : 'Play'}>
-          {isPlaying ? '⏸️' : '▶️'}
+          {isPlaying ? '||' : '>'}
         </button>
         <button className="winamp-btn" onClick={stop} title="Stop">
-          ⏹️
+          []
         </button>
         <button className="winamp-btn" onClick={nextTrack} title="Next">
-          ⏭️
+          &gt;|
         </button>
       </div>
 
       {/* Volume */}
       <div className="winamp-volume">
-        <span>🔊</span>
+        <span>VOL</span>
         <input
           type="range"
           min="0"
@@ -269,7 +269,7 @@ export default function WinampApp() {
 
       {/* Playlist */}
       <div className="winamp-playlist">
-        <div className="winamp-playlist-header">📋 Playlist</div>
+        <div className="winamp-playlist-header">PLAYLIST</div>
         <div className="winamp-playlist-items">
           {playlist.map((track, index) => (
             <div
@@ -291,7 +291,7 @@ export default function WinampApp() {
 
       {/* Drop Zone Hint */}
       <div className="winamp-drop-hint">
-        🎵 Drop audio files here to add to playlist
+        Drop audio files here to add to playlist
       </div>
     </div>
   );

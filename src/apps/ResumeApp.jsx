@@ -6,14 +6,14 @@ export default function ResumeApp() {
       {/* WordPad-style Toolbar */}
       <div className="resume-toolbar">
         <div className="toolbar-group">
-          <button className="toolbar-btn" title="Save">💾</button>
-          <button className="toolbar-btn" title="Print">🖨️</button>
+          <button className="toolbar-btn" title="Save">Save</button>
+          <button className="toolbar-btn" title="Print">Print</button>
         </div>
         <div className="toolbar-divider" />
         <div className="toolbar-group">
-          <button className="toolbar-btn" title="Cut">✂️</button>
-          <button className="toolbar-btn" title="Copy">📋</button>
-          <button className="toolbar-btn" title="Paste">📄</button>
+          <button className="toolbar-btn" title="Cut">Cut</button>
+          <button className="toolbar-btn" title="Copy">Copy</button>
+          <button className="toolbar-btn" title="Paste">Paste</button>
         </div>
         <div className="toolbar-divider" />
         <div className="toolbar-group">

@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useFileSystem } from '../context/FileSystemContext';
+import Icon from '../components/Icon';
 
 // CORS Proxy to bypass same-origin restrictions
 // CORS Proxy to bypass same-origin restrictions
@@ -430,7 +431,7 @@ export default function InternetExplorerApp() {
   };
 
   // Download file to desktop
-  const handleDownload = (fileName, fileContent, fileIcon = '📄') => {
+  const handleDownload = (fileName, fileContent, fileIcon = 'notepad') => {
     addFile({
       name: fileName,
       type: 'file',
@@ -439,18 +440,18 @@ export default function InternetExplorerApp() {
       content: fileContent,
       appType: 'notepad',
     });
-    alert(`✅ "${fileName}" has been downloaded to your Desktop!`);
+    alert(`"${fileName}" has been downloaded to your Desktop!`);
   };
 
   // Render home page
   const renderHome = () => (
     <div className="ie-home">
       <div className="ie-home-header">
-        <div className="ie-logo-large">🌐</div>
+        <Icon icon="internet-explorer" size={64} />
         <h1>Internet Explorer</h1>
         <p>The World Wide Web at your fingertips</p>
       </div>
-      
+
       <div className="ie-home-search">
         <form onSubmit={handleSubmit}>
           <input
@@ -465,22 +466,22 @@ export default function InternetExplorerApp() {
       </div>
 
       <div className="ie-quick-links">
-        <h3>🔗 Quick Links</h3>
+        <h3>Quick Links</h3>
         <div className="ie-quick-links-grid">
           <div className="ie-quick-link" onClick={() => navigateTo('example.com')}>
-            <span>🌍</span>
+            <span className="ie-quick-icon">🌐</span>
             <span>Example.com</span>
           </div>
           <div className="ie-quick-link" onClick={() => navigateTo('wikipedia.org')}>
-            <span>📚</span>
+            <span className="ie-quick-icon">📚</span>
             <span>Wikipedia</span>
           </div>
           <div className="ie-quick-link" onClick={() => navigateTo('news.ycombinator.com')}>
-            <span>📰</span>
+            <span className="ie-quick-icon">📰</span>
             <span>Hacker News</span>
           </div>
           <div className="ie-quick-link" onClick={() => setCurrentPage('downloads')}>
-            <span>📥</span>
+            <span className="ie-quick-icon">📁</span>
             <span>Downloads</span>
           </div>
         </div>
@@ -598,15 +599,15 @@ export default function InternetExplorerApp() {
   // Render downloads page
   const renderDownloads = () => (
     <div className="ie-downloads">
-      <h2>📥 Available Downloads</h2>
+      <h2>Available Downloads</h2>
       <div className="ie-downloads-list">
         <div className="ie-download-item">
-          <span className="ie-download-icon">📋</span>
+          <span className="ie-download-icon">📄</span>
           <div className="ie-download-info">
             <strong>Resume.txt</strong>
             <p>My professional resume</p>
           </div>
-          <button 
+          <button
             className="win95-button"
             onClick={() => handleDownload('Resume.txt', `DANIEL CHEN - RESUME
 ═══════════════════════════════════════
@@ -630,29 +631,29 @@ EDUCATION
 CONTACT
 -------
 • Email: hello@danielchen.dev
-• GitHub: github.com/danielchen`, '📋')}
+• GitHub: github.com/danielchen`, 'notepad')}
           >
             Download
           </button>
         </div>
-        
+
         <div className="ie-download-item">
-          <span className="ie-download-icon">📧</span>
+          <span className="ie-download-icon">📇</span>
           <div className="ie-download-info">
             <strong>Contact.txt</strong>
             <p>Contact information</p>
           </div>
-          <button 
+          <button
             className="win95-button"
             onClick={() => handleDownload('Contact.txt', `CONTACT INFORMATION
 ═══════════════════
 
-📧 Email: hello@danielchen.dev
-🐙 GitHub: github.com/danielchen
-💼 LinkedIn: linkedin.com/in/danielchen
-🐦 Twitter: @danielchen
+Email: hello@danielchen.dev
+GitHub: github.com/danielchen
+LinkedIn: linkedin.com/in/danielchen
+Twitter: @danielchen
 
-Feel free to reach out anytime!`, '📧')}
+Feel free to reach out anytime!`, 'notepad')}
           >
             Download
           </button>
@@ -664,16 +665,16 @@ Feel free to reach out anytime!`, '📧')}
             <strong>demo_song.mp3</strong>
             <p>A sample audio file</p>
           </div>
-          <button 
+          <button
             className="win95-button"
             onClick={() => handleDownload('demo_song.txt', `[This would be an audio file]
-Play it in Winamp!`, '🎵')}
+Play it in Winamp!`, 'notepad')}
           >
             Download
           </button>
         </div>
       </div>
-      
+
       <button className="win95-button" onClick={goHome} style={{ marginTop: 20 }}>
         ← Back to Home
       </button>
@@ -683,22 +684,22 @@ Play it in Winamp!`, '🎵')}
   // Render error page
   const renderError = () => (
     <div className="ie-error">
-      <div className="ie-error-icon">❌</div>
+      <span style={{ fontSize: '48px' }}>❌</span>
       <h2>Cannot Display This Page</h2>
       <p>{error?.message}</p>
-      
+
       {error?.type === 'blocked' && (
         <div className="ie-error-actions">
           <p>This website ({error.url}) prevents embedded browsing for security reasons.</p>
-          <button 
+          <button
             className="win95-button ie-open-browser-btn"
             onClick={() => openInRealBrowser(error.url)}
           >
-            🌐 Open in Real Browser
+            Open in Real Browser
           </button>
         </div>
       )}
-      
+
       <button className="win95-button" onClick={goHome} style={{ marginTop: 20 }}>
         ← Back to Home
       </button>
@@ -730,52 +731,52 @@ Play it in Winamp!`, '🎵')}
     <div className="ie-app">
       {/* Toolbar */}
       <div className="ie-toolbar">
-        <button 
-          className="win95-button ie-nav-btn" 
+        <button
+          className="win95-button ie-nav-btn"
           onClick={goBack}
           disabled={historyIndex <= 0}
           title="Back"
         >
-          ◀
+          ◄
         </button>
-        <button 
-          className="win95-button ie-nav-btn" 
+        <button
+          className="win95-button ie-nav-btn"
           onClick={goForward}
           disabled={historyIndex >= history.length - 1}
           title="Forward"
         >
-          ▶
+          ►
         </button>
-        <button 
-          className="win95-button ie-nav-btn" 
+        <button
+          className="win95-button ie-nav-btn"
           onClick={refresh}
           disabled={!url && currentPage !== 'search'}
           title="Refresh"
         >
-          🔄
+          ↻
         </button>
-        <button 
-          className="win95-button ie-nav-btn" 
+        <button
+          className="win95-button ie-nav-btn"
           onClick={stopLoading}
           disabled={!isLoading}
           title="Stop"
         >
-          ⏹️
+          ✕
         </button>
-        <button 
-          className="win95-button ie-nav-btn" 
+        <button
+          className="win95-button ie-nav-btn"
           onClick={goHome}
           title="Home"
         >
-          🏠
+          ⌂
         </button>
         {url && (
-          <button 
-            className="win95-button ie-nav-btn" 
+          <button
+            className="win95-button ie-nav-btn"
             onClick={() => openInRealBrowser(url)}
             title="Open in Real Browser"
           >
-            🔗
+            ↗
           </button>
         )}
       </div>
@@ -805,7 +806,7 @@ Play it in Winamp!`, '🎵')}
       {/* Status Bar */}
       <div className="ie-status-bar">
         <span>
-          {isLoading ? '⏳ Loading...' : currentPage === 'browse' ? `🌐 ${url}` : currentPage === 'search' ? '🔍 Done' : '✅ Ready'}
+          {isLoading ? 'Loading...' : currentPage === 'browse' ? url : currentPage === 'search' ? 'Done' : 'Ready'}
         </span>
       </div>
     </div>

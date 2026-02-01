@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useOS } from '../context/OSContext';
 import { useFileSystem } from '../context/FileSystemContext';
-import { setSelectedFile } from '../components/KeyboardShortcuts';
+import { setSelectedFile, setSelectedFiles } from '../components/KeyboardShortcuts';
 import Icon from '../components/Icon';
 
 export default function ExplorerApp({ folderId = 'desktop', windowId }) {
@@ -28,6 +28,15 @@ export default function ExplorerApp({ folderId = 'desktop', windowId }) {
   const [expandedFolders, setExpandedFolders] = useState(['desktop', 'my-computer']);
   const [sidebarDropTarget, setSidebarDropTarget] = useState(null); // Track which sidebar folder is drop target
 
+  // Marquee selection state
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [selectionBox, setSelectionBox] = useState(null);
+  const isSelectingRef = useRef(false);
+  const justFinishedSelectingRef = useRef(false);
+  const selectionStartRef = useRef({ x: 0, y: 0 });
+  const selectionCurrentRef = useRef({ x: 0, y: 0 });
+  const gridRef = useRef(null);
+
   const lastClickTimeRef = useRef(0);
   const lastClickIdRef = useRef(null);
 
@@ -53,6 +62,11 @@ export default function ExplorerApp({ folderId = 'desktop', windowId }) {
       setAddressValue(path);
     }
   }, [currentFolderId, getFilePath]);
+
+  // Set global folder context when this explorer is active
+  useEffect(() => {
+    setSelectedFile(null, currentFolderId);
+  }, [currentFolderId]);
 
   // Auto-expand sidebar to show current folder
   const expandToFolder = useCallback((targetFolderId) => {
@@ -102,6 +116,8 @@ export default function ExplorerApp({ folderId = 'desktop', windowId }) {
   const navigateTo = useCallback((targetFolderId) => {
     setCurrentFolderId(targetFolderId);
     setSelectedId(null);
+    setSelectedIds([]);
+    setSelectedFile(null, targetFolderId); // Update global folder context for paste
 
     // Auto-expand sidebar to show this folder
     expandToFolder(targetFolderId);
@@ -121,6 +137,7 @@ export default function ExplorerApp({ folderId = 'desktop', windowId }) {
       setHistoryIndex(newIndex);
       setCurrentFolderId(newFolderId);
       setSelectedId(null);
+      setSelectedIds([]);
       expandToFolder(newFolderId);
     }
   }, [historyIndex, history, expandToFolder]);
@@ -133,6 +150,7 @@ export default function ExplorerApp({ folderId = 'desktop', windowId }) {
       setHistoryIndex(newIndex);
       setCurrentFolderId(newFolderId);
       setSelectedId(null);
+      setSelectedIds([]);
       expandToFolder(newFolderId);
     }
   }, [historyIndex, history, expandToFolder]);
@@ -196,7 +214,8 @@ export default function ExplorerApp({ folderId = 'desktop', windowId }) {
       }
     } else {
       setSelectedId(file.id);
-      setSelectedFile(file.id, currentFolderId);
+      setSelectedIds([file.id]);
+      setSelectedFiles([file.id], currentFolderId);
     }
 
     lastClickTimeRef.current = now;
@@ -249,11 +268,139 @@ export default function ExplorerApp({ folderId = 'desktop', windowId }) {
 
   // Deselect when clicking empty area
   const handleBackgroundClick = useCallback(() => {
+    // Don't clear if we just finished a marquee selection
+    if (justFinishedSelectingRef.current) return;
+
     setSelectedId(null);
+    setSelectedIds([]);
+    setSelectedFile(null, currentFolderId); // Update global folder context for paste
     if (isRenaming) {
       handleRenameSubmit();
     }
-  }, [isRenaming, handleRenameSubmit]);
+  }, [isRenaming, handleRenameSubmit, currentFolderId]);
+
+  // Check if two rectangles intersect
+  const rectsIntersect = (rect1, rect2) => {
+    return !(
+      rect1.left + rect1.width < rect2.left ||
+      rect2.left + rect2.width < rect1.left ||
+      rect1.top + rect1.height < rect2.top ||
+      rect2.top + rect2.height < rect1.top
+    );
+  };
+
+  // Handle mouse down on grid background (start marquee selection)
+  const handleSelectionStart = useCallback((e) => {
+    // Don't start selection if clicking on an item
+    if (e.target.closest('.explorer-item')) {
+      return;
+    }
+
+    const grid = gridRef.current;
+    if (!grid) return;
+
+    const rect = grid.getBoundingClientRect();
+    const x = e.clientX - rect.left + grid.scrollLeft;
+    const y = e.clientY - rect.top + grid.scrollTop;
+
+    isSelectingRef.current = true;
+    selectionStartRef.current = { x, y };
+    selectionCurrentRef.current = { x, y };
+    setSelectionBox(null);
+  }, []);
+
+  // Global mouse event listeners for marquee selection
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isSelectingRef.current) return;
+
+      const grid = gridRef.current;
+      if (!grid) return;
+
+      const rect = grid.getBoundingClientRect();
+      const x = Math.max(0, e.clientX - rect.left + grid.scrollLeft);
+      const y = Math.max(0, e.clientY - rect.top + grid.scrollTop);
+
+      selectionCurrentRef.current = { x, y };
+
+      const start = selectionStartRef.current;
+      const current = selectionCurrentRef.current;
+
+      setSelectionBox({
+        left: Math.min(start.x, current.x),
+        top: Math.min(start.y, current.y),
+        width: Math.abs(current.x - start.x),
+        height: Math.abs(current.y - start.y)
+      });
+    };
+
+    const handleMouseUp = () => {
+      if (!isSelectingRef.current) return;
+
+      isSelectingRef.current = false;
+
+      const grid = gridRef.current;
+      if (!grid) {
+        setSelectionBox(null);
+        return;
+      }
+
+      const start = selectionStartRef.current;
+      const current = selectionCurrentRef.current;
+      const box = {
+        left: Math.min(start.x, current.x),
+        top: Math.min(start.y, current.y),
+        width: Math.abs(current.x - start.x),
+        height: Math.abs(current.y - start.y)
+      };
+
+      // Only process if selection box has some size (was a drag, not just a click)
+      if (box.width > 5 && box.height > 5) {
+        const newSelectedIds = [];
+        const gridRect = grid.getBoundingClientRect();
+
+        // Check each explorer item for intersection
+        const itemElements = grid.querySelectorAll('.explorer-item[data-file-id]');
+        itemElements.forEach(itemEl => {
+          const fileId = itemEl.getAttribute('data-file-id');
+          const itemRect = itemEl.getBoundingClientRect();
+
+          // Convert item rect to grid-relative coordinates (accounting for scroll)
+          const itemBox = {
+            left: itemRect.left - gridRect.left + grid.scrollLeft,
+            top: itemRect.top - gridRect.top + grid.scrollTop,
+            width: itemRect.width,
+            height: itemRect.height
+          };
+
+          if (rectsIntersect(box, itemBox)) {
+            newSelectedIds.push(fileId);
+          }
+        });
+
+        setSelectedIds(newSelectedIds);
+        setSelectedId(newSelectedIds.length === 1 ? newSelectedIds[0] : null);
+        setSelectedFiles(newSelectedIds, currentFolderId);
+
+        // Mark that we just finished selecting (prevent click from clearing)
+        if (newSelectedIds.length > 0) {
+          justFinishedSelectingRef.current = true;
+          setTimeout(() => { justFinishedSelectingRef.current = false; }, 100);
+        }
+      }
+
+      // Clear the visual selection box
+      setSelectionBox(null);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [currentFolderId]);
 
   // Drag and Drop handlers for main grid
   const handleDragOver = useCallback((e) => {
@@ -483,8 +630,13 @@ export default function ExplorerApp({ folderId = 'desktop', windowId }) {
     );
   }, [getFile, expandedFolders, currentFolderId, sidebarDropTarget, navigateTo, toggleFolderExpansion, handleSidebarDragOver, handleSidebarDragLeave, handleSidebarDrop]);
 
+  // Handle any click inside the explorer to set it as active folder context
+  const handleExplorerClick = useCallback(() => {
+    window.__currentFolderId = currentFolderId;
+  }, [currentFolderId]);
+
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }} onClick={handleExplorerClick}>
       {/* Toolbar */}
       <div className="explorer-toolbar">
         <button
@@ -548,14 +700,28 @@ export default function ExplorerApp({ folderId = 'desktop', windowId }) {
           style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
         >
             <div
+              ref={gridRef}
               className={`explorer-grid ${isDropTarget ? 'drop-target' : ''}`}
-              style={{ flex: 1, overflowY: 'auto' }}
+              style={{ flex: 1, overflowY: 'auto', position: 'relative' }}
               data-folder-id={currentFolderId}
               onClick={handleBackgroundClick}
+              onMouseDown={handleSelectionStart}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
             >
+              {/* Marquee Selection Box */}
+              {selectionBox && selectionBox.width > 2 && selectionBox.height > 2 && (
+                <div
+                  className="selection-box"
+                  style={{
+                    left: selectionBox.left,
+                    top: selectionBox.top,
+                    width: selectionBox.width,
+                    height: selectionBox.height,
+                  }}
+                />
+              )}
               {files.length === 0 ? (
                 <div style={{ padding: '16px', color: '#808080', fontStyle: 'italic' }}>
                   This folder is empty
@@ -569,7 +735,7 @@ export default function ExplorerApp({ folderId = 'desktop', windowId }) {
                     return (
                   <div
                     key={file.id}
-                    className={`explorer-item ${selectedId === file.id ? 'selected' : ''}`}
+                    className={`explorer-item ${selectedId === file.id || selectedIds.includes(file.id) ? 'selected' : ''}`}
                     onClick={(e) => handleClick(file, e)}
                     onDoubleClick={() => handleDoubleClick(file)}
                     draggable

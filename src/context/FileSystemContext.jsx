@@ -434,7 +434,7 @@ CLOUD & DATABASES
     id: 'resume',
     name: 'Resume.doc',
     type: 'file',
-    icon: 'resume',
+    icon: 'file',
     position: { x: 20, y: 460 },
     appType: 'resume',
   },
@@ -442,15 +442,15 @@ CLOUD & DATABASES
     id: 'contact',
     name: 'Contact.txt',
     type: 'file',
-    icon: 'contact',
+    icon: 'notepad',
     position: { x: 20, y: 535 },
     content: `CONTACT INFORMATION
 ═══════════════════
 
-[EMAIL]    Email: hello@danielchen.dev
-[GITHUB]   GitHub: github.com/danielchen
-[WORK]     LinkedIn: linkedin.com/in/danielchen
-[BIRD]     Twitter: @danielchen
+Email:     hello@danielchen.dev
+GitHub:    github.com/danielchen
+LinkedIn:  linkedin.com/in/danielchen
+Twitter:   @danielchen
 
 Feel free to reach out!`,
     appType: 'notepad',

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useOS } from '../context/OSContext';
 import { useFileSystem } from '../context/FileSystemContext';
+import Icon from './Icon';
 
 export default function RunDialog({ onClose }) {
   const { openWindow } = useOS();
@@ -26,7 +27,7 @@ export default function RunDialog({ onClose }) {
         openWindow('terminal', {
           id: 'terminal',
           name: 'MS-DOS Prompt',
-          icon: '⬛',
+          icon: 'terminal',
           appType: 'terminal',
         });
         break;
@@ -34,7 +35,7 @@ export default function RunDialog({ onClose }) {
         openWindow('notepad', {
           id: `notepad-${Date.now()}`,
           name: 'Untitled - Notepad',
-          icon: '📝',
+          icon: 'notepad',
           appType: 'notepad',
         });
         break;
@@ -42,7 +43,7 @@ export default function RunDialog({ onClose }) {
         openWindow('mycomputer', {
           id: 'mycomputer',
           name: 'My Computer',
-          icon: '💻',
+          icon: 'my-computer',
           appType: 'mycomputer',
         });
         break;
@@ -54,7 +55,7 @@ export default function RunDialog({ onClose }) {
         openWindow('winamp', {
             id: 'winamp',
             name: 'Winamp',
-            icon: '🎵',
+            icon: 'winamp',
             appType: 'winamp',
         });
         break;
@@ -63,7 +64,7 @@ export default function RunDialog({ onClose }) {
         openWindow('minesweeper', {
             id: 'minesweeper',
             name: 'Minesweeper',
-            icon: '💣',
+            icon: 'minesweeper',
             appType: 'minesweeper',
         });
         break;
@@ -77,7 +78,7 @@ export default function RunDialog({ onClose }) {
         openWindow('browser', {
             id: 'browser',
             name: 'Internet Explorer',
-            icon: '🌐',
+            icon: 'internet-explorer',
             appType: 'browser',
         });
         break;
@@ -93,7 +94,9 @@ export default function RunDialog({ onClose }) {
   return (
     <div style={{ padding: '16px' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '16px' }}>
-        <div style={{ fontSize: '32px', marginRight: '16px' }}>🏃</div>
+        <div style={{ marginRight: '16px' }}>
+          <Icon icon="run" size={32} />
+        </div>
         <div style={{ fontSize: '12px' }}>
           Type the name of a program, folder, or document, and<br/>
           Windows will open it for you.

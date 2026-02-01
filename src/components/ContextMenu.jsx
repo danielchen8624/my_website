@@ -220,7 +220,7 @@ export default function ContextMenu() {
       return (
         <>
           <div className="context-menu-item" onClick={() => handleAction('minimizeAll')}>
-            <span className="context-menu-icon"><Icon icon="🗕" size={16} /></span>
+            <span className="context-menu-icon"><Icon icon="program" size={16} /></span>
             <span>Minimize All Windows</span>
           </div>
           <div className="context-menu-divider" />
@@ -247,7 +247,7 @@ export default function ContextMenu() {
           <div className="context-menu-divider" />
           {clipboard && (
             <div className="context-menu-item" onClick={() => handleAction('paste')}>
-              <span className="context-menu-icon"><Icon icon="📋" size={16} /></span>
+              <span className="context-menu-icon"><Icon icon="notepad" size={16} /></span>
               <span>Paste</span>
             </div>
           )}
@@ -279,11 +279,11 @@ export default function ContextMenu() {
           <>
             <div className="context-menu-divider" />
             <div className="context-menu-item" onClick={() => handleAction('cut')}>
-              <span className="context-menu-icon"><Icon icon="✂️" size={16} /></span>
+              <span className="context-menu-icon"><Icon icon="notepad" size={16} /></span>
               <span>Cut</span>
             </div>
             <div className="context-menu-item" onClick={() => handleAction('copy')}>
-              <span className="context-menu-icon"><Icon icon="📋" size={16} /></span>
+              <span className="context-menu-icon"><Icon icon="notepad" size={16} /></span>
               <span>Copy</span>
             </div>
             <div className="context-menu-divider" />

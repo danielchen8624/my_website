@@ -36,7 +36,7 @@ export default function RecycleBinApp() {
           onClick={handleEmptyBin}
           disabled={recycleBinContents.length === 0}
         >
-          🗑️ Empty Recycle Bin
+          Empty Recycle Bin
         </button>
       </div>
 
@@ -44,7 +44,7 @@ export default function RecycleBinApp() {
       <div className="recyclebin-content">
         {recycleBinContents.length === 0 ? (
           <div className="recyclebin-empty">
-            <div className="recyclebin-empty-icon">🗑️</div>
+            <div className="recyclebin-empty-icon">[Empty]</div>
             <p>The Recycle Bin is empty.</p>
           </div>
         ) : (
@@ -59,14 +59,14 @@ export default function RecycleBinApp() {
                     onClick={() => handleRestore(file.id)}
                     title="Restore"
                   >
-                    ↩️
+                    {'<<'}
                   </button>
                   <button 
                     className="win95-button recyclebin-action-btn"
                     onClick={() => handleDelete(file.id)}
                     title="Delete Permanently"
                   >
-                    ❌
+                    [X]
                   </button>
                 </div>
               </div>

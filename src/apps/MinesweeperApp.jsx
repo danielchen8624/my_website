@@ -161,16 +161,16 @@ export default function MinesweeperApp({ windowId }) {
   }, [gameState]);
 
   const getFaceEmoji = () => {
-    if (gameState === 'won') return '😎';
-    if (gameState === 'lost') return '😵';
-    if (isMouseDown) return '😮';
-    return '🙂';
+    if (gameState === 'won') return 'B)';
+    if (gameState === 'lost') return 'X(';
+    if (isMouseDown) return ':O';
+    return ':)';
   };
 
   const getCellContent = (cell) => {
-    if (cell.isFlagged) return '🚩';
+    if (cell.isFlagged) return 'P';
     if (!cell.isRevealed) return '';
-    if (cell.isMine) return '💣';
+    if (cell.isMine) return '*';
     if (cell.neighborMines === 0) return '';
     return cell.neighborMines;
   };
@@ -236,7 +236,7 @@ export default function MinesweeperApp({ windowId }) {
       {/* Status */}
       {gameState !== 'playing' && (
         <div className="minesweeper-status">
-          {gameState === 'won' ? '🎉 You Win!' : '💥 Game Over!'}
+          {gameState === 'won' ? 'You Win!' : 'Game Over!'}
         </div>
       )}
     </div>
