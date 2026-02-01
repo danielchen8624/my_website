@@ -1744,12 +1744,18 @@ body {
 }
 
 .terminal-input-line {
-  display: flex;
-  align-items: center;
+  display: block;
+  white-space: nowrap;
+}
+
+.terminal-input-line span {
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 
 .terminal-input {
-  flex: 1;
+  width: auto;
+  min-width: 50%;
   background: transparent;
   border: none;
   outline: none;

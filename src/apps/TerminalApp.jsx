@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useFileSystem } from '../context/FileSystemContext';
 import { Shell } from '../utils/Shell';
 
@@ -7,12 +7,15 @@ export default function TerminalApp() {
 
   const inputRef = useRef(null);
   const outputRef = useRef(null);
+  const shellRef = useRef(null);
 
-  // Create shell instance with memoization
-  const shell = useMemo(() => {
-    const sh = new Shell(fileSystem);
-    return sh;
-  }, [fileSystem]);
+  // Create shell instance once, update fs reference when it changes
+  if (!shellRef.current) {
+    shellRef.current = new Shell(fileSystem);
+  } else {
+    shellRef.current.fs = fileSystem;
+  }
+  const shell = shellRef.current;
 
   const [history, setHistory] = useState([
     'Microsoft(R) Windows 95',

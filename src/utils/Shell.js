@@ -21,10 +21,14 @@ const TokenType = {
 
 /**
  * Tokenizer - Breaks input into tokens, respecting quotes and operators
+ * Adjacent quoted strings and words are concatenated (e.g., "a"/"b" becomes a/b)
  */
 function tokenize(input) {
   const tokens = [];
   let i = 0;
+
+  // Helper to check if character is an operator start
+  const isOperatorChar = (ch) => /[|><;&]/.test(ch);
 
   while (i < input.length) {
     // Skip whitespace
@@ -60,13 +64,26 @@ function tokenize(input) {
       continue;
     }
 
-    // Handle quoted strings
-    if (input[i] === '"' || input[i] === "'") {
-      const quote = input[i];
-      i++;
-      let word = '';
-      while (i < input.length && input[i] !== quote) {
-        // Handle escape sequences
+    // Build a word by concatenating adjacent quoted strings and unquoted text
+    let word = '';
+    while (i < input.length && !/\s/.test(input[i]) && !isOperatorChar(input[i])) {
+      // Handle quoted strings
+      if (input[i] === '"' || input[i] === "'") {
+        const quote = input[i];
+        i++;
+        while (i < input.length && input[i] !== quote) {
+          // Handle escape sequences
+          if (input[i] === '\\' && i + 1 < input.length) {
+            i++;
+            word += input[i];
+          } else {
+            word += input[i];
+          }
+          i++;
+        }
+        i++; // Skip closing quote
+      } else {
+        // Regular character
         if (input[i] === '\\' && i + 1 < input.length) {
           i++;
           word += input[i];
@@ -75,22 +92,6 @@ function tokenize(input) {
         }
         i++;
       }
-      i++; // Skip closing quote
-      tokens.push({ type: TokenType.WORD, value: word });
-      continue;
-    }
-
-    // Regular word (no spaces, no operators)
-    let word = '';
-    while (i < input.length && !/[\s|><;&]/.test(input[i])) {
-      // Handle escape sequences outside quotes
-      if (input[i] === '\\' && i + 1 < input.length) {
-        i++;
-        word += input[i];
-      } else {
-        word += input[i];
-      }
-      i++;
     }
     if (word) {
       tokens.push({ type: TokenType.WORD, value: word });
