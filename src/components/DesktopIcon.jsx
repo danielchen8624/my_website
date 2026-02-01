@@ -64,6 +64,11 @@ export default function DesktopIcon({ file, isSelected: isSelectedProp = false }
 
   // Handle double-click to open
   const handleDoubleClick = useCallback(() => {
+    // Handle external links - open in new browser tab
+    if (file.appType === 'external-link' && file.url) {
+      window.open(file.url, '_blank');
+      return;
+    }
     openWindow(file.id, file);
   }, [openWindow, file]);
 

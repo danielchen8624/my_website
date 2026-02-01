@@ -114,7 +114,7 @@ creative and interactive web experiences.
 Thanks for visiting! Feel free to explore.
 
                                           - Daniel Chen`,
-    appType: 'about',
+    appType: 'notepad',
   },
   'projects': {
     id: 'projects',
@@ -122,8 +122,272 @@ Thanks for visiting! Feel free to explore.
     type: 'folder',
     icon: 'folder',
     position: { x: 20, y: 310 },
-    children: ['project-1', 'project-2', 'project-3'],
+    children: ['proj-dcoasis', 'pengucoder', 'proj-autocar', 'proj-sleepsurvival', 'proj-wingman', 'proj-ummahpulse'],
     appType: 'explorer',
+  },
+  // ═══════════════════════════════════════════════════════════════
+  // PROJECT: dcoasis
+  // ═══════════════════════════════════════════════════════════════
+  'proj-dcoasis': {
+    id: 'proj-dcoasis',
+    name: 'dcoasis',
+    type: 'folder',
+    icon: 'folder',
+    children: ['dcoasis-readme', 'dcoasis-launch'],
+    appType: 'explorer',
+  },
+  'dcoasis-readme': {
+    id: 'dcoasis-readme',
+    name: 'README.txt',
+    type: 'file',
+    icon: 'notepad',
+    content: `═════════════════════════════════════════════════════
+                         DCOASIS
+═════════════════════════════════════════════════════
+
+A condo management application helping manage 2,500+ condos
+across the Greater Toronto Area.
+
+STATUS: Currently under patent approval.
+
+TECH STACK:
+───────────────────────────────────────────────────────
+* React Native
+* TypeScript
+* Expo
+* Firebase
+
+
+Double-click "Launch" to view the app.
+═════════════════════════════════════════════════════`,
+    appType: 'notepad',
+  },
+  'dcoasis-launch': {
+    id: 'dcoasis-launch',
+    name: 'Launch',
+    type: 'file',
+    icon: 'browser',
+    appType: 'external-link',
+    url: 'https://apps.apple.com/ca/app/dcoasis/id6752588044',
+  },
+  // ═══════════════════════════════════════════════════════════════
+  // PROJECT: CodeTyper
+  // ═══════════════════════════════════════════════════════════════
+  'pengucoder': {
+    id: 'pengucoder',
+    name: 'PenguCode',
+    type: 'folder',
+    icon: 'folder',
+    children: ['pengucode-readme', 'pengucode-launch'],
+    appType: 'explorer',
+  },
+  'pengucode-readme': {
+    id: 'pengucode-readme',
+    name: 'README.txt',
+    type: 'file',
+    icon: 'notepad',
+    content: `═════════════════════════════════════════════════════
+                       PenguCode
+═════════════════════════════════════════════════════
+
+Monkeytype, but for code. Practice typing real programming
+syntax at high speed.
+
+TECH STACK:
+───────────────────────────────────────────────────────
+* TypeScript
+* React
+* Vite
+* Supabase
+
+Double-click "Launch" to try it out.
+═════════════════════════════════════════════════════`,
+    appType: 'notepad',
+  },
+  'pengucode-launch': {
+    id: 'pengucode-launch',
+    name: 'Launch Website',
+    type: 'file',
+    icon: 'browser',
+    appType: 'external-link',
+    url: 'https://pengucode.ca/',
+  },
+  // ═══════════════════════════════════════════════════════════════
+  // PROJECT: Autonomous Car
+  // ═══════════════════════════════════════════════════════════════
+  'proj-autocar': {
+    id: 'proj-autocar',
+    name: 'Autonomous Car',
+    type: 'folder',
+    icon: 'folder',
+    children: ['autocar-readme', 'autocar-launch'],
+    appType: 'explorer',
+  },
+  'autocar-readme': {
+    id: 'autocar-readme',
+    name: 'README.txt',
+    type: 'file',
+    icon: 'notepad',
+    content: `═════════════════════════════════════════════════════
+                   AUTONOMOUS CAR
+              WRO Future Engineers 2023
+═════════════════════════════════════════════════════
+
+Self-driving vehicle project for the World Robot Olympiad.
+
+ACHIEVEMENTS:
+─────────────────────────────────────────────────────── 
+* 1st Place - Canada
+* 6th Place - International (40+ countries)
+* 2000 + International Teams
+
+TECH STACK:
+───────────────────────────────────────────────────────
+* C++
+* Python
+* OpenCV
+* Arduino
+* NumPy
+
+
+Double-click "View Project" to see repository.
+═════════════════════════════════════════════════════`, 
+    appType: 'notepad',
+  },
+  'autocar-launch': {
+    id: 'autocar-launch',
+    name: 'View Project',
+    type: 'file',
+    icon: 'browser',
+    appType: 'external-link',
+    url: '#https://github.com/AaronXu07/2023-WRO-Future-Engineers-Competition', // TODO: Add your link here
+  },
+  // ═══════════════════════════════════════════════════════════════
+  // PROJECT: sleep-survival
+  // ═══════════════════════════════════════════════════════════════
+  'proj-sleepsurvival': {
+    id: 'proj-sleepsurvival',
+    name: 'sleep-survival',
+    type: 'folder',
+    icon: 'folder',
+    children: ['sleepsurvival-readme', 'sleepsurvival-launch'],
+    appType: 'explorer',
+  },
+  'sleepsurvival-readme': {
+    id: 'sleepsurvival-readme',
+    name: 'README.txt',
+    type: 'file',
+    icon: 'notepad',
+    content: `═════════════════════════════════════════════════════
+                   SLEEP SURVIVAL
+═════════════════════════════════════════════════════
+
+A story-mode survival game built with Java and Swing.
+
+TECH STACK:
+───────────────────────────────────────────────────────
+* Java
+* Swing (GUI)
+
+
+Double-click "View Project" to see the GitHub repo.
+═════════════════════════════════════════════════════`,             
+    appType: 'notepad',
+  },
+  'sleepsurvival-launch': {
+    id: 'sleepsurvival-launch',
+    name: 'View Project',
+    type: 'file',
+    icon: 'browser',
+    appType: 'external-link',
+    url: 'https://github.com/danielchen8624/Sleep-Survival',
+  },
+  // ═══════════════════════════════════════════════════════════════
+  // PROJECT: Wingman
+  // ═══════════════════════════════════════════════════════════════
+  'proj-wingman': {
+    id: 'proj-wingman',
+    name: 'Wingman',
+    type: 'folder',
+    icon: 'folder',
+    children: ['wingman-readme', 'wingman-launch'],
+    appType: 'explorer',
+  },
+  'wingman-readme': {
+    id: 'wingman-readme',
+    name: 'README.txt',
+    type: 'file',
+    icon: 'notepad',
+    content: `═════════════════════════════════════════════════════
+                       WINGMAN
+════════════════════════════════════════════════════
+
+A smart rizz assistant that understands context and helps
+you craft the perfect response on the fly. No more back 
+and forth screenshots that break conversation flow.
+
+TECH STACK:
+───────────────────────────────────────────────────────
+* Python
+* Flask
+* OpenAI API
+* HTML/CSS/JS
+
+
+Double-click "Launch" to see the repository.
+═════════════════════════════════════════════════════`,
+    appType: 'notepad',
+  },
+  'wingman-launch': {
+    id: 'wingman-launch',
+    name: 'Launch Website',
+    type: 'file',
+    icon: 'browser',
+    appType: 'external-link',
+    url: 'https://github.com/danielchen8624/Wingman',
+  },
+  // ═══════════════════════════════════════════════════════════════
+  // PROJECT: Ummah Pulse
+  // ═══════════════════════════════════════════════════════════════
+  'proj-ummahpulse': {
+    id: 'proj-ummahpulse',
+    name: 'Ummah Pulse',
+    type: 'folder',
+    icon: 'folder',
+    children: ['ummahpulse-readme', 'ummahpulse-launch'],
+    appType: 'explorer',
+  },
+  'ummahpulse-readme': {
+    id: 'ummahpulse-readme',
+    name: 'README.txt',
+    type: 'file',
+    icon: 'notepad',
+    content: `═════════════════════════════════════════════════════
+                     UMMAH PULSE
+═════════════════════════════════════════════════════
+
+A global, real-timecrises tracker keeping the community informed
+about humanitarian situations worldwide.
+
+TECH STACK:
+───────────────────────────────────────────────────────
+* React
+* Next.js
+* TypeScript
+* Tailwind CSS
+* Mapbox GL
+
+Double-click "Launch Website" to view.
+═════════════════════════════════════════════════════`,
+    appType: 'notepad',
+  },
+  'ummahpulse-launch': {
+    id: 'ummahpulse-launch',
+    name: 'Launch Website',
+    type: 'file',
+    icon: 'browser',
+    appType: 'external-link',
+    url: 'https://devpost.com/software/ummah_pulse',
   },
   'skills-file': {
     id: 'skills-file',
@@ -189,7 +453,7 @@ CLOUD & DATABASES
 [BIRD]     Twitter: @danielchen
 
 Feel free to reach out!`,
-    appType: 'contact',
+    appType: 'notepad',
   },
   'readme': {
     id: 'readme',
@@ -238,7 +502,7 @@ directly in your browser.
    * "minesweeper" -> Launches the game
    * "cmd"         -> Opens Terminal
    * "explorer"    -> Opens File Explorer
-   * "www.google.com" -> Launches Web Browser
+   * "www.google.com" -> Launches Internet Explorer (wink wink)
 
 [ SYSTEM SECRETS ]
 ----------------------------------------------------------------
@@ -252,30 +516,7 @@ Enjoy exploring!
 - Daniel`,
     appType: 'notepad',
   },
-  'project-1': {
-    id: 'project-1',
-    name: 'Project Alpha',
-    type: 'file',
-    icon: 'browser',
-    content: 'A full-stack web application built with React and Node.js',
-    link: 'https://github.com',
-  },
-  'project-2': {
-    id: 'project-2',
-    name: 'Project Beta',
-    type: 'file',
-    icon: 'browser',
-    content: 'An interactive data visualization dashboard',
-    link: 'https://github.com',
-  },
-  'project-3': {
-    id: 'project-3',
-    name: 'Retro OS Website',
-    type: 'file',
-    icon: 'browser',
-    content: 'This website! A Windows 95 themed portfolio.',
-    link: '#',
-  },
+
 };
 
 // Load from localStorage or use defaults

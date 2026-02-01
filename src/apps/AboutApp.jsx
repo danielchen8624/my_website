@@ -14,7 +14,7 @@ building creative and interactive experiences.
 
   WHAT I DO
 ─────────────────────────────────────────────────────
-• Full-Stack Web Development
+• Full-Stack Development
 • Backend Development
 • Interactive Experiences
 • Problem Solving

@@ -15,8 +15,8 @@ export default function StartMenu() {
         if (projectsFile) openWindow('projects', projectsFile);
         break;
       case 'documents':
-        const aboutFile = getFile('about');
-        if (aboutFile) openWindow('about', aboutFile);
+        const docsFolder = getFile('my-documents');
+        if (docsFolder) openWindow('my-documents', docsFolder);
         break;
       case 'internet':
         const ieFile = getFile('internet-explorer');

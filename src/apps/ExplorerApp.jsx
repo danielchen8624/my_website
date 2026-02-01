@@ -172,6 +172,9 @@ export default function ExplorerApp({ folderId = 'desktop', windowId }) {
       navigateTo(file.id);
     } else if (file.type === 'system' && file.children) {
       navigateTo(file.id);
+    } else if (file.appType === 'external-link' && file.url) {
+      // Handle external links - open in new browser tab
+      window.open(file.url, '_blank');
     } else {
       openWindow(file.id, file);
     }
