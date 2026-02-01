@@ -21,7 +21,6 @@ export default function TerminalApp() {
     'Microsoft(R) Windows 95',
     '   (C)Copyright Microsoft Corp 1981-1995.',
     '',
-    `${shell.getCwd()}>`,
   ]);
   const [inputValue, setInputValue] = useState('');
   const [commandHistory, setCommandHistory] = useState([]);
@@ -31,7 +30,7 @@ export default function TerminalApp() {
   // Set up shell callbacks
   useEffect(() => {
     shell.onClear = () => {
-      setHistory([`${shell.getCwd()}>`]);
+      setHistory([]);
     };
 
     shell.onExit = () => {
@@ -39,7 +38,6 @@ export default function TerminalApp() {
         ...prev,
         'Type "exit" in real life to close this window.',
         '',
-        `${shell.getCwd()}>`,
       ]);
     };
 
@@ -86,7 +84,7 @@ export default function TerminalApp() {
     const currentPath = shell.getCwd();
 
     if (!inputValue.trim()) {
-      setHistory(prev => [...prev, `${currentPath}>`]);
+      setHistory(prev => [...prev, `${currentPath}>`, '']);
       setInputValue('');
       return;
     }
@@ -115,9 +113,8 @@ export default function TerminalApp() {
         lines.push(result.stderr);
       }
 
-      // Add empty line and new prompt
+      // Add empty line (prompt is shown by the input form)
       lines.push('');
-      lines.push(`${newCwd}>`);
 
       setHistory(prev => [...prev, ...lines]);
     }
@@ -162,7 +159,6 @@ export default function TerminalApp() {
             `${currentPath}>${inputValue}`,
             matches.map(m => m.name).join('  '),
             '',
-            `${currentPath}>`,
           ]);
         }
       }
