@@ -122,7 +122,7 @@ Thanks for visiting! Feel free to explore.
     type: 'folder',
     icon: 'folder',
     position: { x: 20, y: 310 },
-    children: ['proj-dcoasis', 'pengucoder', 'proj-autocar', 'proj-sleepsurvival', 'proj-wingman', 'proj-ummahpulse'],
+    children: ['proj-dcoasis', 'proj-pengucode', 'proj-autocar', 'proj-sleepsurvival', 'proj-wingman', 'proj-ummahpulse'],
     appType: 'explorer',
   },
   // ═══════════════════════════════════════════════════════════════
@@ -173,8 +173,8 @@ Double-click "Launch" to view the app.
   // ═══════════════════════════════════════════════════════════════
   // PROJECT: CodeTyper
   // ═══════════════════════════════════════════════════════════════
-  'pengucoder': {
-    id: 'pengucoder',
+  'proj-pengucode': {
+    id: 'proj-pengucode',
     name: 'PenguCode',
     type: 'folder',
     icon: 'folder',
@@ -366,7 +366,7 @@ Double-click "Launch" to see the repository.
                      UMMAH PULSE
 ═════════════════════════════════════════════════════
 
-A global, real-timecrises tracker keeping the community informed
+A global, real-time crises tracker keeping the community informed
 about humanitarian situations worldwide.
 
 TECH STACK:
