@@ -4,7 +4,7 @@ import { createContext, useContext, useState, useCallback, useEffect } from 'rea
 const FileSystemContext = createContext(null);
 
 // Storage key for localStorage
-const STORAGE_KEY = 'retro-os-filesystem-v4';
+const STORAGE_KEY = 'retro-os-filesystem-v6';
 
 // Default file system structure - Windows 95 hierarchy
 // Desktop is the root, contains My Computer, Recycle Bin, My Documents, and user files
@@ -440,20 +440,11 @@ CLOUD & DATABASES
   },
   'contact': {
     id: 'contact',
-    name: 'Contact.txt',
+    name: 'Contact.doc',
     type: 'file',
-    icon: 'notepad',
+    icon: 'file',
     position: { x: 20, y: 535 },
-    content: `CONTACT INFORMATION
-═══════════════════
-
-Email:     hello@danielchen.dev
-GitHub:    github.com/danielchen
-LinkedIn:  linkedin.com/in/danielchen
-Twitter:   @danielchen
-
-Feel free to reach out!`,
-    appType: 'notepad',
+    appType: 'contact',
   },
   'readme': {
     id: 'readme',
