@@ -95,7 +95,7 @@ const DEFAULT_FILES = {
 ║                    ABOUT ME                                ║
 ╚══════════════════════════════════════════════════════════╝
 
-Hello, World! <WAVE>
+Hello, World!
 
 I'm Daniel Chen, a passionate developer who loves building
 creative and interactive web experiences.
@@ -104,7 +104,7 @@ creative and interactive web experiences.
 
 [*] WHAT I DO
 ────────────────────────────────────────────────────────────
-* Full-Stack Web Development
+* Full-Stack Development
 * Creative UI/UX Design
 * Interactive Experiences
 * Problem Solving
