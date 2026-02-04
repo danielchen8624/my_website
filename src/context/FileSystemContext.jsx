@@ -260,7 +260,7 @@ Double-click "View Project" to see repository.
     type: 'file',
     icon: 'browser',
     appType: 'external-link',
-    url: '#https://github.com/AaronXu07/2023-WRO-Future-Engineers-Competition', // TODO: Add your link here
+    url: 'https://github.com/AaronXu07/2023-WRO-Future-Engineers-Competition',
   },
   // ═══════════════════════════════════════════════════════════════
   // PROJECT: sleep-survival
