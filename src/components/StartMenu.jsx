@@ -23,8 +23,12 @@ export default function StartMenu() {
         if (ieFile) openWindow('internet-explorer', ieFile);
         break;
       case 'mycomputer':
-        const skillsFile = getFile('skills');
-        if (skillsFile) openWindow('skills', skillsFile);
+        openWindow('my-computer', {
+          id: 'my-computer',
+          name: 'My Computer',
+          icon: 'my-computer',
+          appType: 'mycomputer',
+        });
         break;
       case 'winamp':
         openWindow('winamp', {
