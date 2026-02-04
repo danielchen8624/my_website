@@ -324,7 +324,7 @@ function Desktop() {
         return;
       }
     }
-
+    
     // Fall back to theme desktop color if no wallpaper
     if (savedDesktopColor) {
       desktop.style.background = savedDesktopColor;
@@ -489,3 +489,6 @@ function App() {
 }
 
 export default App;
+
+
+//ignore this comment, im debugging my github connection
