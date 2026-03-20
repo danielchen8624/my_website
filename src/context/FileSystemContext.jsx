@@ -98,7 +98,7 @@ const DEFAULT_FILES = {
 Hello, World!
 
 I'm Daniel Chen, a passionate developer who loves building
-creative and interactive web experiences.
+creative and interactive experiences.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
